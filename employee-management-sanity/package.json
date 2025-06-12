@@ -16,6 +16,8 @@
     "sanity"
   ],
   "dependencies": {
+    "@sanity/cli": "^3.92.0",
+    "@sanity/export": "^3.44.0",
     "@sanity/vision": "^3.92.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -34,5 +36,10 @@
     "printWidth": 100,
     "bracketSpacing": false,
     "singleQuote": true
+  },
+  "overrides": {
+    "rimraf": "3.0.2",
+    "minimatch": "3.1.2",
+    "brace-expansion": "1.1.11"
   }
 }
