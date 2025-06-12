@@ -4,6 +4,7 @@ import attendance from "./attendance";
 import schedule from "./schedule";
 import department from "./department";
 import role from "./role";
+import leave from "./leave";
 
 const schemas = [
   employee,
@@ -12,5 +13,6 @@ const schemas = [
   schedule,
   department,
   role,   
+  leave
 ];
 export default schemas;
