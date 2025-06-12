@@ -11,3 +11,10 @@ export type Attendance = {
     email: string;
   };
 };
+
+export type AttendanceInput = {
+  employeeId: string;
+  date: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+};
