@@ -1,5 +1,6 @@
 {
-  "name": "",
+  "name": "emploeyee-management-sanity",
+  "description": "Sanity Studio for Employee Management System",
   "private": true,
   "version": "1.0.0",
   "main": "package.json",
