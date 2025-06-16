@@ -1,30 +1,107 @@
+'use client'
 import React from "react";
+import { Card, CardContent } from "@/component/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-const page = () => {
+const employeeStats = {
+  total: 20,
+  active: 2,
+  wfh: 2,
+  absent: 2,
+};
+
+const attendanceData = [
+  { name: "Mon", Present: 6, Absent: 2, Off: 0 },
+  { name: "Tue", Present: 6, Absent: 2, Off: 0 },
+  { name: "Wed", Present: 6, Absent: 2, Off: 0 },
+  { name: "Thu", Present: 0, Absent: 0, Off: 8 },
+  { name: "Fri", Present: 6, Absent: 2, Off: 0 },
+  { name: "Sat", Present: 8, Absent: 0, Off: 0 },
+  { name: "Sun", Present: 8, Absent: 0, Off: 0 },
+];
+
+const pieData = [
+  { name: "P1", value: 5 },
+  { name: "P2", value: 5 },
+  { name: "P3", value: 5 },
+  { name: "P4", value: 5 },
+  { name: "P5", value: 5 },
+];
+
+const leaveSummary = {
+  available: 8,
+  taken: 16,
+  annual: 24,
+};
+
+const DashboardPage = () => {
   return (
-    <main className="flex min-h-screen flex-col items-center  p-24">
-      <h1 className="text-4xl font-bold">Dashboard</h1>
-      
-      <div className="mt-6 flex items-center space-x-4">
-      <a 
-        className="mt-2 inline-block rounded-full bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
-        href="/performance">
-         Performance Page
-      </a>
-        <a 
-            className="mt-2 inline-block rounded-full bg-green-600 px-6 py-3 text-white hover:bg-green-700"
-            href="/employees">
-         Employees </a>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+      {/* Summary Cards */}
+      <Card className="col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <CardContent>Clock In: <strong>9:30 AM</strong></CardContent>
+        <CardContent>Clock Out: <strong>9:30 PM</strong></CardContent>
+        <CardContent>My Team: <strong>{employeeStats.total}</strong></CardContent>
+        <CardContent>Active: <strong>{employeeStats.active}</strong></CardContent>
+        <CardContent>WFH: <strong>{employeeStats.wfh}</strong></CardContent>
+        <CardContent>Absent: <strong>{employeeStats.absent}</strong></CardContent>
+      </Card>
 
-        <a 
-            className="mt-2 inline-block rounded-full bg-red-600 px-6 py-3 text-white hover:bg-red-700"
-            href="/projects">
-         attendance </a>
-        <a 
-            className="mt-2 inline-block rounded-full bg-purple-600 px-6 py-3 text-white hover:bg-purple-700"
-            href="/schedule"> schedule</a>
-            </div>
-    </main>
+      {/* Attendance Performance Chart */}
+      <Card>
+        <CardContent>
+          <h2 className="text-lg font-bold mb-2">Attendance Performances</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={attendanceData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="Present" fill="#4ade80" />
+              <Bar dataKey="Absent" fill="#f87171" />
+              <Bar dataKey="Off" fill="#a3a3a3" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Current Projects Pie */}
+      <Card>
+        <CardContent>
+          <h2 className="text-lg font-bold mb-2">My Current Project</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={80}
+                label
+              >
+                {pieData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={["#60a5fa", "#facc15", "#f87171", "#34d399", "#a78bfa"][index % 5]}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Leave Summary */}
+      <Card>
+        <CardContent>
+          <h2 className="text-lg font-bold mb-2">Leave Summary</h2>
+          <ul>
+            <li>Available: {leaveSummary.available}</li>
+            <li>Taken: {leaveSummary.taken}</li>
+            <li>Annual: {leaveSummary.annual}</li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
   );
-}
-export default page;
+};
+
+export default DashboardPage;
