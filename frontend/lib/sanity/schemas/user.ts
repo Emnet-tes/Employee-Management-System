@@ -8,11 +8,9 @@ export default {
     { name: "password", type: "string", title: "Password" },
     {
       name: "role",
-      type: "string",
+      type: "reference",
+      to: [{ type: "role" }],
       title: "Role",
-      options: {
-        list: ["Admin", "Manager", "Employee"],
-      },
     },
     {
       name: "employee",

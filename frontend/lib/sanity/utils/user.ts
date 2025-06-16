@@ -9,6 +9,16 @@ type CreateUserInput = {
 
 // Create a new user
 export async function createUser(data: CreateUserInput): Promise<User> {
+
+  const existingUser = await client.fetch(
+    `*[_type == "user" && email == $email][0]`,
+    { email: data.email }
+  );
+
+  if (existingUser) {
+    throw new Error("A user with this email already exists.");
+  }
+  
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const newUser = await client.create({
