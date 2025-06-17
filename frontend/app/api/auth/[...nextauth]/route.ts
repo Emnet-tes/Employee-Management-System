@@ -1,10 +1,9 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { client } from "@/lib/sanity/client";
 import bcrypt from "bcryptjs";
 
-import type { NextAuthOptions, Session, User } from "next-auth";
-
+// Extend the built-in types to include `id` and `role`
 declare module "next-auth" {
   interface Session {
     user: {
@@ -32,8 +31,8 @@ declare module "next-auth/jwt" {
   }
 }
 
-
-const handler = NextAuth({
+// Exported so you can use it in getServerSession()
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -42,8 +41,11 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
+        // Look for user in Sanity
         const user = await client.fetch(
           `*[_type == "user" && email == $email][0]{
             _id,
@@ -51,7 +53,7 @@ const handler = NextAuth({
             password,
             role->{
               _id,
-              name
+              title
             }
           }`,
           { email: credentials.email }
@@ -64,7 +66,7 @@ const handler = NextAuth({
         return {
           id: user._id,
           email: user.email,
-          role: user.role?.name || "Employee",
+          role: user.role?.title || "Employee", // fallback to Employee
         };
       },
     }),
@@ -82,16 +84,18 @@ const handler = NextAuth({
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
   },
   pages: {
-    signIn: "/login",
+    signIn: "/login", // custom login page
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
 
+// Required to handle auth routes in /api/auth/[...nextauth].ts
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

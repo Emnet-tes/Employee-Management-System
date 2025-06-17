@@ -1,9 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { getAllSchedules, createSchedule } from "@/lib/sanity/utils/schedule";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { Card, CardContent } from "@/component/card";
 import { Schedule } from "@/types/schedule";
+import { auth } from "@/lib/auth";
 
 const SchedulePage = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -28,48 +36,73 @@ const SchedulePage = () => {
     alert("Schedule created!");
   };
 
+  const [session, setSession] = useState<any>(null);
+
+  async function fetchSession() {
+    const sess = await auth();
+    setSession(sess);
+    console.log("Session fetched:", sess);
+  }
+  fetchSession();
+
+  console.log("Session:", session);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
       {/* ---------------------------------------------
           ADMIN & MANAGER VIEW: Form to Assign Schedules
          --------------------------------------------- */}
       {/* TODO: Show this form only if role === 'admin' || 'manager' */}
-      <Card>
-        <CardContent>
-          <h2 className="font-bold mb-2">Assign Work Schedule</h2>
-          <form onSubmit={handleSubmit} className="space-y-2">
-            <input
-              type="text"
-              placeholder="Employee ID"
-              value={formData.employeeId}
-              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <input
-              type="text"
-              placeholder="Shift"
-              value={formData.shift}
-              onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <textarea
-              placeholder="Notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-              Save
-            </button>
-          </form>
-        </CardContent>
-      </Card>
+      
+      {(session?.user?.role === "admin" || session?.user?.role === "manager") && (
+        <Card>
+          <CardContent>
+        <h2 className="font-bold mb-2">Assign Work Schedule</h2>
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <input
+            type="text"
+            placeholder="Employee ID"
+            value={formData.employeeId}
+            onChange={(e) =>
+          setFormData({ ...formData, employeeId: e.target.value })
+            }
+            className="border p-2 w-full"
+          />
+          <input
+            type="text"
+            placeholder="Shift"
+            value={formData.shift}
+            onChange={(e) =>
+          setFormData({ ...formData, shift: e.target.value })
+            }
+            className="border p-2 w-full"
+          />
+          <input
+            type="date"
+            value={formData.date}
+            onChange={(e) =>
+          setFormData({ ...formData, date: e.target.value })
+            }
+            className="border p-2 w-full"
+          />
+          <textarea
+            placeholder="Notes"
+            value={formData.notes}
+            onChange={(e) =>
+          setFormData({ ...formData, notes: e.target.value })
+            }
+            className="border p-2 w-full"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Save
+          </button>
+        </form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* -------------------------------------------------------
           ADMIN, MANAGER & EMPLOYEE VIEW: View Scheduled Shifts

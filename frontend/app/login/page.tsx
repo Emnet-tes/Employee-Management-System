@@ -1,6 +1,8 @@
 "use client";
+
 import Image from "next/image";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -11,22 +13,19 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Clear previous error
+    setError("");
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
     });
 
-    if (!res.ok) {
+    if (result?.error) {
       setError("Invalid email or password");
-      return;
+    } else {
+      router.push("/dashboard");
     }
-
-    const user = await res.json();
-    localStorage.setItem("user", JSON.stringify(user));
-    router.push("/dashboard");
   };
 
   return (
@@ -77,9 +76,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
-            )}
+            {error && <div className="text-red-500 text-sm">{error}</div>}
 
             <div className="flex justify-between items-center text-sm">
               <button
