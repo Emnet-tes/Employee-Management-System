@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -22,7 +23,7 @@ export default function SignupPage() {
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password , name }),
     });
 
     if (!res.ok) {
@@ -30,9 +31,7 @@ export default function SignupPage() {
       return;
     }
 
-    const user = await res.json();
-    localStorage.setItem("user", JSON.stringify(user));
-    router.push("/dashboard");
+    router.push("/login");
   };
 
   return (
@@ -61,6 +60,17 @@ export default function SignupPage() {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-5">
+            <div>
+              <label className="text-gray-600 text-sm">Full Name</label>
+              <input
+                type="text"
+                className="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
             <div>
               <label className="text-gray-600 text-sm">Email</label>
               <input

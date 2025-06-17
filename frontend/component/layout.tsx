@@ -12,6 +12,9 @@ import {
   BarChart,
 } from "lucide-react";
 
+import { signOut } from "next-auth/react";
+
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -26,6 +29,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             icon={<Home size={20} />}
             label="Dashboard"
             href="/dashboard"
+          />
+          <NavItem
+            icon={<BarChart size={20} />}
+            label="Employee"
+            href="/employees"
           />
           <NavItem
             icon={<Calendar size={20} />}
@@ -51,7 +59,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </nav>
 
         <div className="pt-10 border-t">
-          <button className="flex items-center gap-2 text-red-500 hover:text-red-700 transition">
+          <button
+          onClick={() => signOut({ callbackUrl: "/login" })} 
+          className="flex items-center gap-2 text-red-500 hover:text-red-700 transition">
             <LogOut size={20} /> Logout
           </button>
         </div>

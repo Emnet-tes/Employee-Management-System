@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 type CreateUserInput = {
   email: string;
   password: string;
+  name: string;
   roleId: string;
 };
 
@@ -18,16 +19,27 @@ export async function createUser(data: CreateUserInput): Promise<User> {
   if (existingUser) {
     throw new Error("A user with this email already exists.");
   }
+
+  const employeeDoc = await client.create({
+    _type: "employee",
+    name: data.name,
+    email: data.email,
+  });
   
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const newUser = await client.create({
     _type: "user",
+    name: data.name,
     email: data.email,
     password: hashedPassword,
     role: {
       _type: "reference",
       _ref: data.roleId,
+    },
+    employee: {
+      _type: "reference",
+      _ref: employeeDoc._id,
     },
   });
 
