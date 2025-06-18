@@ -11,7 +11,9 @@ type PerformanceInput = {
   rating: number;
 };
 
-export async function createPerformance(data: PerformanceInput): Promise<Performance> {
+export async function createPerformance(
+  data: PerformanceInput
+): Promise<Performance> {
   const newDoc = await client.create({
     _type: "performance",
     employee: { _type: "reference", _ref: data.employeeId },
@@ -47,31 +49,32 @@ export async function createPerformance(data: PerformanceInput): Promise<Perform
 
 // Read all
 export async function getAllPerformances(): Promise<Performance[]> {
-  const query = `*[_type == "performance"]{
+  const query = `
+  *[_type == "performance"]{
     _id,
-    _type,
     date,
-    kpis,
-    feedback,
     rating,
+    feedback,
+    goals,
+    kpis,
     employee->{
-      _id,
       name,
-      position
+      email
     },
     reviewer->{
-      _id,
-      name,
-      position
+      name
     }
-  } | order(date desc)`;
+  } | order(date desc)
+`;
 
   const results = await client.fetch(query);
   return results as Performance[];
 }
 
 // Read by ID
-export async function getPerformanceById(id: string): Promise<Performance | null> {
+export async function getPerformanceById(
+  id: string
+): Promise<Performance | null> {
   const query = `*[_type == "performance" && _id == $id][0]{
     _id,
     _type,
@@ -105,7 +108,10 @@ type PerformanceUpdateInput = {
   rating?: number;
 };
 
-export async function updatePerformance(id: string, updates: PerformanceUpdateInput): Promise<Performance> {
+export async function updatePerformance(
+  id: string,
+  updates: PerformanceUpdateInput
+): Promise<Performance> {
   const patch: Record<string, any> = {};
 
   if (updates.employeeId) {
@@ -149,3 +155,44 @@ export async function deletePerformance(id: string): Promise<{ _id: string }> {
   const result = await client.delete(id);
   return result;
 }
+
+export async function getPerformancesByReviewer(reviewerId: string): Promise<Performance[]> {
+  const query = `
+    *[_type == "performance" && reviewer._ref == $reviewerId]{
+      _id,
+      date,
+      rating,
+      feedback,
+      goals,
+      kpis,
+      employee->{
+        name,
+        email
+      },
+      reviewer->{
+        name
+      }
+    } | order(date desc)
+  `;
+  const results = await client.fetch(query, { reviewerId });
+  return results as Performance[];
+}
+
+export async function getPerformanceByEmployeeId(employeeId: string): Promise<Performance[]> {
+  const query = `
+    *[_type == "performance" && employee._ref == $employeeId]{
+      _id,
+      date,
+      rating,
+      feedback,
+      goals,
+      kpis,
+      reviewer->{
+        name
+      }
+    } | order(date desc)
+  `;
+   const results = await client.fetch(query, { employeeId });
+  return results as Performance[];
+}
+
