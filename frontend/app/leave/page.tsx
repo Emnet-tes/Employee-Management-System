@@ -1,6 +1,9 @@
 "use client";
 import { Leave } from "@/types/leaves";
 import React, { useEffect, useState } from "react";
+import LeaveForm from "../_component/LeaveForm";
+import LeaveSummery from "../_component/LeaveSummery";
+import LeaveTable from "../_component/LeaveTable";
 
 export default function LeavesPage() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -36,15 +39,20 @@ export default function LeavesPage() {
   }
 
   return (
-    <div>
-      <h1>Leaves</h1>
-      <button
+    <div className="text-black p-4  gap-4 flex flex-col">
+      <LeaveForm />
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 p-2">
+        <LeaveSummery />
+        <LeaveTable />
+      </div>
+
+      {/* <button
         onClick={handleCreate}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
       >
         Create Test Leave
-      </button>
-      <ul>
+      </button> */}
+      {/* <ul>
         {leaves.map((leave) => (
           <li
             key={leave._id}
@@ -62,7 +70,7 @@ export default function LeavesPage() {
             </button>
           </li>
         ))}
-      </ul>
+      </ul> */}
     </div>
   );
 }
