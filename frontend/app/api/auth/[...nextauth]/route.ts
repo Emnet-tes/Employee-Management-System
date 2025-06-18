@@ -12,6 +12,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      employeeId?: string | null;
     };
   }
 
@@ -59,7 +60,10 @@ export const authOptions: NextAuthOptions = {
           { email: credentials.email }
         );
 
-        if (!user || !(await bcrypt.compare(credentials.password, user.password))) {
+        if (
+          !user ||
+          !(await bcrypt.compare(credentials.password, user.password))
+        ) {
           return null;
         }
 
@@ -77,6 +81,11 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const dbUser = await client.fetch(
+      `*[_type == "user" && _id == $id][0]{ _id, employee->{_id}, role->{name} }`,
+      { id: user.id }
+    );
+        token.employeeId = dbUser?.employee?._id || null;
         token.id = user.id;
         token.role = user.role;
       }
@@ -85,6 +94,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.employeeId = token.employeeId as string | null;
         session.user.role = token.role as string;
       }
       return session;
