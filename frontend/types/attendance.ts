@@ -5,10 +5,14 @@ export type Attendance = {
   date: string;
   checkIn: string | null;
   checkOut: string | null;
+  status: "Present" | "Absent" | "Leave";
   employee: {
     _id: string;
     name: string;
     email: string;
+    department?: {
+      name: string;
+    } | null;
   };
 };
 
@@ -17,4 +21,5 @@ export type AttendanceInput = {
   date: string;
   checkIn?: string | null;
   checkOut?: string | null;
+  status: "Present" | "Absent" | "Leave";
 };
