@@ -54,20 +54,7 @@ const TimeCard = () => {
         </div>
       </div>
 
-      {/* Total Over Time */}
-      <div className="bg-white h-28 p-4 flex items-center rounded-xl shadow-sm overflow-hidden">
-        <div className="p-3 rounded-full bg-red-50 flex-shrink-0">
-          <Briefcase size={36} color="salmon" />
-        </div>
-        <div className="flex flex-col justify-center px-2 overflow-hidden whitespace-nowrap">
-          <span className="text-gray-800 font-semibold text-base truncate">
-            20 hr
-          </span>
-          <span className="text-gray-500 text-sm truncate">
-            Total Over Time
-          </span>
-        </div>
-      </div>
+   
     </div>
   );
 }
