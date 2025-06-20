@@ -1,22 +1,34 @@
+import { Rule } from "@sanity/types";
+
 export default {
   name: "user",
   title: "User",
   type: "document",
   fields: [
-    { name: "name", type: "string", title: "Name" },
-    { name: "email", type: "string", title: "Email" },
-    { name: "password", type: "string", title: "Password" },
+    {
+      name: "name",
+      type: "string",
+      title: "Full Name",
+      validation: (Rule: Rule) => Rule.required(),
+    },
+    {
+      name: "email",
+      type: "string",
+      title: "Email",
+      validation: (Rule: Rule) => Rule.required().email(),
+    },
+    {
+      name: "password",
+      type: "string",
+      title: "Password",
+      validation: (Rule: Rule) => Rule.required(),
+    },
     {
       name: "role",
       type: "reference",
       to: [{ type: "role" }],
       title: "Role",
-    },
-    {
-      name: "employee",
-      type: "reference",
-      to: [{ type: "employee" }],
-      title: "Employee Profile",
+      validation: (Rule: Rule) => Rule.required(),
     },
   ],
 };

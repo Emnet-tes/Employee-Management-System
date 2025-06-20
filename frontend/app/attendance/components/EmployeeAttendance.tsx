@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect,useState } from "react";
 import { Attendance } from "@/types/attendance";
 import { calculateWorkHours } from "@/app/utils/utils";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
