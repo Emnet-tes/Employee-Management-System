@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const reviewerId = req.nextUrl.searchParams.get("reviewerId");
   const employeeId = req.nextUrl.searchParams.get("employeeId");
+
   if (reviewerId) {
     const reviews = await getPerformancesByReviewer(reviewerId);
     return NextResponse.json(reviews);

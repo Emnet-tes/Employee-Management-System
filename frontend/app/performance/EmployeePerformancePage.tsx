@@ -1,12 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent } from '@/component/card';
-import { Performance } from '@/types/performance';
+import React, { useEffect, useState } from "react";
+import { Card, CardContent } from "@/component/card";
+import { Performance } from "@/types/performance";
 
-const EmployeePerformancePage = ({session} : {session:any}) => {
-  const [reviews, setReviews] = useState<Performance[]>([]);
+const EmployeePerformancePage = ({ session }: { session: any }) => {
+  const [reviews, setReviews] = useState<Performance[]>([]) || [];
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,11 +13,18 @@ const EmployeePerformancePage = ({session} : {session:any}) => {
       if (!session?.user?.employeeId) return;
 
       try {
-        const res = await fetch(`/api/performance/employee?employeeId=${session.user.employeeId}`);
+        console.log(
+          "main Fetching employee performance data for:",
+          session.user.employeeId
+        );
+        const res = await fetch(
+          `/api/performance?employeeId=${session.user.employeeId}`
+        );
         const data = await res.json();
+        console.log("Fetched employee performance data:", data);
         setReviews(data);
       } catch (error) {
-        console.error('Error fetching employee performance:', error);
+        console.log("Error fetching employee performance:", error);
       } finally {
         setLoading(false);
       }
@@ -27,14 +33,18 @@ const EmployeePerformancePage = ({session} : {session:any}) => {
     fetchEmployeeReviews();
   }, [session]);
 
-  if (status === 'loading' || loading) return <p className="p-4">Loading your performance data...</p>;
+  if (loading) {
+    return <p className="p-4">Loading your performance reviews...</p>;
+  }
 
   return (
     <div className="p-4 grid grid-cols-1 gap-4">
-      {reviews.map((review) => (
+      {reviews?.map((review) => (
         <Card key={review._id}>
           <CardContent>
-            <h2 className="text-xl font-bold">Reviewed by {review.reviewer.name}</h2>
+            <h2 className="text-xl font-bold">
+              Reviewed by {review?.reviewer?.name}
+            </h2>
             <p className="text-sm text-gray-500 mb-2">
               On {new Date(review.date).toLocaleDateString()}
             </p>
@@ -47,7 +57,7 @@ const EmployeePerformancePage = ({session} : {session:any}) => {
             <div className="mb-3">
               <h3 className="font-semibold">Goals:</h3>
               <ul className="list-disc list-inside">
-                {review.goals.map((goal, index) => (
+                {review?.goals?.map((goal, index) => (
                   <li key={index}>{goal}</li>
                 ))}
               </ul>
@@ -56,9 +66,10 @@ const EmployeePerformancePage = ({session} : {session:any}) => {
             <div className="mb-3">
               <h3 className="font-semibold">KPIs:</h3>
               <ul className="list-disc list-inside">
-                {review.kpis.map((kpiObj, index) => (
+                {review?.kpis?.map((kpiObj, index) => (
                   <li key={index}>
-                    {kpiObj.kpi} - Target: {kpiObj.target}, Achieved: {kpiObj.achieved}
+                    {kpiObj.kpi} - Target: {kpiObj.target}, Achieved:{" "}
+                    {kpiObj.achieved}
                   </li>
                 ))}
               </ul>

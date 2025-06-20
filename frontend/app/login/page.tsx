@@ -81,7 +81,7 @@ export default function LoginPage() {
             <div className="flex justify-between items-center text-sm">
               <button
                 type="submit"
-                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition"
+                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer"
               >
                 Login →
               </button>

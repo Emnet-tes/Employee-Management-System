@@ -46,6 +46,7 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
   }`;
 
   const employee = await client.fetch(query, { id });
+  console.log("Fetched employee:", employee);
   return employee || null;
 }
 
