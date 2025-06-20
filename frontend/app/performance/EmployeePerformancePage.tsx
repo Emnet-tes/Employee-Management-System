@@ -14,11 +14,13 @@ const EmployeePerformancePage = ({session} : {session:any}) => {
       if (!session?.user?.employeeId) return;
 
       try {
-        const res = await fetch(`/api/performance/employee?employeeId=${session.user.employeeId}`);
+        console.log('main Fetching employee performance data for:', session.user.employeeId);
+        const res = await fetch(`/api/performance?employeeId=${session.user.employeeId}`);
         const data = await res.json();
+        console.log('Fetched employee performance data:', data);
         setReviews(data);
       } catch (error) {
-        console.error('Error fetching employee performance:', error);
+        console.log('Error fetching employee performance:', error);
       } finally {
         setLoading(false);
       }
