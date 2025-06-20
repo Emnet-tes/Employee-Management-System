@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth";
-import { Magnet } from "lucide-react";
 import { redirect } from "next/navigation";
 
 

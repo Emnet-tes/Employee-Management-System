@@ -50,9 +50,20 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
 }
 
 export async function getEmployeesByUserId(id: string): Promise<Employee> {
-  const query = groq`*[_type == "employee" && user._ref == $id]{
-    department->{ _id,name, description },
+  const query = groq`*[_type == "employee" && user._ref == $id][0]{
+    user->{ _id, name, email },
+    name,
+    phone,
+    photo,
+    employmentStatus,
+    role->{ title },
+    position,
+    startDate,
+    documents,
+  department->{ _id,name, description },
     _id,
+    _createdAt,
+    _updatedAt
     }`
     const employees = await client.fetch(query, { id });
     return employees as Employee;

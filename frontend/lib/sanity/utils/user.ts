@@ -67,6 +67,7 @@ export async function getUserById(id: string): Promise<User> {
   const query = `*[_type == "user" && _id == $id][0]{
     _id,
     email,
+    name,
     role->{
       _id,
       name
@@ -79,13 +80,38 @@ export async function getUserById(id: string): Promise<User> {
 // Update user
 export async function updateUser(id: string, updates: {
   email?: string;
-  password?: string;
+  name?: string;
   roleId?: string;
 }): Promise<User> {
   const patch: Record<string, any> = {};
-  if (updates.email) patch.email = updates.email;
-  if (updates.password) patch.password = updates.password;
-  if (updates.roleId) patch.role = { _type: "reference", _ref: updates.roleId };
+
+  // Check for duplicate email
+  if (updates.email) {
+    const existingUser = await client.fetch(
+      `*[_type == "user" && email == $email && _id != $id][0]`,
+      { email: updates.email, id }
+    );
+    if (existingUser) {
+      throw new Error("A user with this email already exists.");
+    }
+    patch.email = updates.email;
+  }
+
+  // Check for duplicate name
+  if (updates.name) {
+    const existingUser = await client.fetch(
+      `*[_type == "user" && name == $name && _id != $id][0]`,
+      { name: updates.name, id }
+    );
+    if (existingUser) {
+      throw new Error("A user with this name already exists.");
+    }
+    patch.name = updates.name;
+  }
+
+  if (updates.roleId) {
+    patch.role = { _type: "reference", _ref: updates.roleId };
+  }
 
   await client.patch(id).set(patch).commit();
 
