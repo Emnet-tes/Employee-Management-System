@@ -19,12 +19,8 @@ export async function createUser(data: CreateUserInput): Promise<User> {
     throw new Error("A user with this email already exists.");
   }
 
-  const employeeDoc = await client.create({
-    _type: "employee",
-    name: data.name,
-    email: data.email,
-  });
-
+  
+  
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const newUser = await client.create({
@@ -35,10 +31,6 @@ export async function createUser(data: CreateUserInput): Promise<User> {
     role: {
       _type: "reference",
       _ref: data.roleId,
-    },
-    employee: {
-      _type: "reference",
-      _ref: employeeDoc._id,
     },
   });
 
