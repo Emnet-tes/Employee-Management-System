@@ -2,16 +2,40 @@
 
 import React, { useEffect, useState } from "react";
 import { Performance } from "@/types/performance";
+import AddReviewModal from "@/component/AddReviewModal";
+import { getEmployees } from "@/lib/sanity/utils/employee";
+import department from "@/lib/sanity/schemas/department";
+import {Employee} from "@/types/employee";;
 
 const ManagerPerformancePage = ({ session }: { session: any }) => {
   const [reviews, setReviews] = useState<Performance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>([]);
+
+useEffect(() => {
+  const fetchEmployees = async () => {
+    const employees = await getEmployees();
+    const manager = employees.find(emp => emp._id === session.user.employeeId);
+    const departmentEmployees = employees.filter(
+      emp => emp.department?.name === manager?.department.name && emp.role.title !== "manager"
+    );
+    setDepartmentEmployees(departmentEmployees);
+    // You can now use departmentEmployees as needed
+    console.log("Department Employees:", departmentEmployees);
+    console.log("Manager:", manager?.department?.name);
+  };
+  fetchEmployees();
+}, []);
+  
 
   useEffect(() => {
     const fetchData = async () => {
       if (!session?.user?.id) return;
       try {
-        const res = await fetch(`/api/performance?reviewerId=${session.user.employeeId}`);
+        const res = await fetch(
+          `/api/performance?reviewerId=${session.user.employeeId}`
+        );
         const data = await res.json();
         setReviews(data);
       } catch (err) {
@@ -32,6 +56,20 @@ const ManagerPerformancePage = ({ session }: { session: any }) => {
 
   return (
     <div className="p-4 overflow-auto">
+      <AddReviewModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        employeeId={session.user.employeeId}
+        employees = {departmentEmployees}
+      />
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer"
+        >
+          Add Review
+        </button>
+      </div>
       <table className="min-w-full table-auto border border-gray-300">
         <thead className="bg-gray-200">
           <tr>

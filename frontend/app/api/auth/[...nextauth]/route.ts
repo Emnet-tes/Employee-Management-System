@@ -82,9 +82,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         const dbUser = await client.fetch(
-      `*[_type == "user" && _id == $id][0]{ _id, employee->{_id}, role->{name} }`,
-      { id: user.id }
-    );
+          `*[_type == "user" && _id == $id][0]{
+    _id,
+    employee->{_id},
+    role->{name}
+  }`,
+          { id: user.id }
+        );
         token.employeeId = dbUser?.employee?._id || null;
         token.id = user.id;
         token.role = user.role;
