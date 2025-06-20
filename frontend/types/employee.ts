@@ -5,28 +5,34 @@ export type Employee = {
   _createdAt: string;
   _updatedAt: string;
   name: string;
-  email: string;
   phone: string;
   photo?: Image | "";
   employmentStatus: string;
   role: {
-    _id?: string;
+    _id: string;
     title: string;
   };
+  position: string;
   startDate: string;
   department: {
-    _id?: string;
+    _id: string;
     name: string;
     description: string;
+  };
+  user: {
+    _id: string;
+    name: string;
+    email: string;
   };
   documents?: File[];
 };
 
 export type EmployeeInput = {
+  userId: string;
   name: string;
-  email: string;
   phone: string;
   photo?: Image | "";
+  position: string;
   employmentStatus: string;
   roleId: string;
   departmentId: string;

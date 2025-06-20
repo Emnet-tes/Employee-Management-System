@@ -3,23 +3,24 @@ import { groq } from "next-sanity";
 import { client } from "../client";
 
 export async function getEmployees(): Promise<Employee[]> {
- 
   return client.fetch(
-    groq`*[_type == "employee" ]{
-    _id,
-    _createdAt,
-    _updatedAt,
-    name,
-    email,
-    phone,
-    photo,
-    employmentStatus,
-    role->{
-    title
-    },
-    startDate,
-    department->{name},
-    "documents": documents[] 
+    groq`*[_type == "employee"]{
+      _id,
+      _createdAt,
+      _updatedAt,
+      phone,
+      photo,
+      employmentStatus,
+      role->{ title },
+      startDate,
+      position,
+      department->{ name, description },
+      user->{
+        _id,
+        name,
+        email
+      },
+      "documents": documents[]
     }`
   );
 }
@@ -29,33 +30,50 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
     _id,
     _createdAt,
     _updatedAt,
-    name,
-    email,
     phone,
     photo,
     employmentStatus,
-    role->{
-      title
-    },
+    role->{ title },
     startDate,
-    "departmentName": department->name,
-    "documents": documents[] 
+    position,
+    department->{ name, description },
+    user->{
+      _id,
+      name,
+      email
+    },
+    "documents": documents[]
   }`;
 
   const employee = await client.fetch(query, { id });
   return employee || null;
 }
 
-export async function createEmployee(employee:EmployeeInput): Promise<Employee> {
+export async function getEmployeesByUserId(id: string): Promise<Employee> {
+  const query = groq`*[_type == "employee" && user._ref == $id]{
+    department->{ _id,name, description },
+    _id,
+    }`
+    const employees = await client.fetch(query, { id });
+    return employees as Employee;
+}
+
+
+
+export async function createEmployee(
+  employee: EmployeeInput
+): Promise<Employee> {
+  console.log("Creating employee with data: 1", employee);
   const newDoc = await client.create({
     _type: "employee",
-    role: { _type:"reference",_ref: employee.roleId },
-    department: { _type: "reference", _ref: employee.departmentId },
-    name: employee.name,
-    email: employee.email,
+    user: { _type: "reference", _ref: employee.userId },
+    role: { _type: "reference", _ref: employee.roleId },
+    name: employee.name, 
     phone: employee.phone,
     photo: employee.photo,
     employmentStatus: employee.employmentStatus,
+    department: { _type: "reference", _ref: employee.departmentId },
+    position: employee.position,
     startDate: employee.startDate,
     documents: employee.documents || [],
   });
@@ -64,17 +82,50 @@ export async function createEmployee(employee:EmployeeInput): Promise<Employee> 
   return populated as Employee;
 }
 
-export async function updateEmployee(id: string, employee: Partial<EmployeeInput>): Promise<Employee | null> {
-  const updatedDoc = await client.patch(id)
-    .set(employee)
-    .commit();
+export async function updateEmployee(
+  id: string,
+  employee: Partial<EmployeeInput>
+): Promise<Employee | null> {
+  const patchData: any = { ...employee };
+
+  if (employee.userId) {
+    patchData.user = { _type: "reference", _ref: employee.userId };
+  }
+  if (employee.roleId) {
+    patchData.role = { _type: "reference", _ref: employee.roleId };
+  }
+  if (employee.departmentId) {
+    patchData.department = { _type: "reference", _ref: employee.departmentId };
+  }
+  if (employee.photo) {
+    patchData.photo = employee.photo;
+  }
+  if (employee.documents) {
+    patchData.documents = employee.documents;
+  }
+  if (employee.startDate) {
+    patchData.startDate = employee.startDate;
+  }
+  if (employee.phone) {
+    patchData.phone = employee.phone;
+  }
+  if (employee.position) {
+    patchData.position = employee.position;
+  }
+
+  const updatedDoc = await client.patch(id).set(patchData).commit();
+
   if (!updatedDoc) {
     throw new Error(`Failed to update employee with id ${id}`);
   }
+
   const populated = await getEmployeeById(updatedDoc._id);
   return populated as Employee;
 }
-export async function deleteEmployee(id: string): Promise<{ _id: string } | null> {
+
+export async function deleteEmployee(
+  id: string
+): Promise<{ _id: string } | null> {
   const result = await client.delete(id);
   if (!result) {
     throw new Error(`Failed to delete employee with id ${id}`);
