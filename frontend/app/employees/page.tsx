@@ -8,6 +8,7 @@ import { getAllDepartments } from "@/lib/sanity/utils/department";
 
 const EmployeesPage = async () => {
   const employees = await getEmployees();
+  console.log("Fetched employees:", employees);
   const roles = await getAllRoles();
   const departments = await getAllDepartments();
 

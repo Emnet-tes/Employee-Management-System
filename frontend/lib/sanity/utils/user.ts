@@ -1,5 +1,5 @@
 import { client } from "../client";
-import { User } from "@/types/user"  // Define this TypeScript type accordingly
+import { User } from "@/types/user"; // Define this TypeScript type accordingly
 import bcrypt from "bcryptjs";
 type CreateUserInput = {
   email: string;
@@ -10,7 +10,6 @@ type CreateUserInput = {
 
 // Create a new user
 export async function createUser(data: CreateUserInput): Promise<User> {
-
   const existingUser = await client.fetch(
     `*[_type == "user" && email == $email][0]`,
     { email: data.email }
@@ -25,7 +24,7 @@ export async function createUser(data: CreateUserInput): Promise<User> {
     name: data.name,
     email: data.email,
   });
-  
+
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const newUser = await client.create({
@@ -44,13 +43,14 @@ export async function createUser(data: CreateUserInput): Promise<User> {
   });
 
   const query = `*[_type == "user" && _id == $id][0]{
+  _id,
+  email,
+  employee->{_id},
+  role->{
     _id,
-    email,
-    role->{
-      _id,
-      name
-    }
-  }`;
+    name
+  }
+}`;
 
   const createdUser = await client.fetch(query, { id: newUser._id });
   return createdUser;
@@ -85,11 +85,14 @@ export async function getUserById(id: string): Promise<User> {
 }
 
 // Update user
-export async function updateUser(id: string, updates: {
-  email?: string;
-  password?: string;
-  roleId?: string;
-}): Promise<User> {
+export async function updateUser(
+  id: string,
+  updates: {
+    email?: string;
+    password?: string;
+    roleId?: string;
+  }
+): Promise<User> {
   const patch: Record<string, any> = {};
   if (updates.email) patch.email = updates.email;
   if (updates.password) patch.password = updates.password;

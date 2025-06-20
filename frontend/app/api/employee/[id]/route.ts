@@ -1,15 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getEmployeeById, updateEmployee, deleteEmployee } from "@/lib/sanity/utils/employee";
+import {
+  getEmployeeById,
+  updateEmployee,
+  deleteEmployee,
+} from "@/lib/sanity/utils/employee";
 
 // GET: Get employee by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: Promise<{ params: { id: string } }>
 ) {
-  const employee = await getEmployeeById(params.id);
-  if (!employee) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(employee);
+  try {
+  const { params } = await context;
+  const { id: employeeId } = await params; 
+
+  const employee = await getEmployeeById(employeeId);
+   return NextResponse.json(employee);
+  }
+  catch (error) {
+    console.log("Error fetching employee:", error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
+ 
 }
+
+
 
 // PATCH: Update employee by ID
 export async function PATCH(
