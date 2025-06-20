@@ -6,7 +6,7 @@ export type Employee = {
   _updatedAt: string;
   name: string;
   phone: string;
-  photo?: Image | "";
+  photo: Image;
   employmentStatus: string;
   role: {
     _id: string;

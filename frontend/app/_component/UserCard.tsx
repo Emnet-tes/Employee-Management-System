@@ -1,7 +1,8 @@
+import { Employee } from '@/types/employee';
 import { Building, CalendarRange, Computer, User } from 'lucide-react';
 import React from 'react'
 
-const UserCard = () => {
+const UserCard = (employee:Employee) => {
   return (
     <div className="w-full grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-10 my-4">
       {/* Clock In */}
@@ -11,7 +12,7 @@ const UserCard = () => {
         </div>
         <div className="flex flex-col justify-center px-2 overflow-hidden whitespace-nowrap">
           <span className="text-gray-800 font-semibold text-base truncate">
-            101
+            {employee._id}
           </span>
           <span className="text-gray-500 text-sm truncate">Employee No</span>
         </div>
@@ -24,7 +25,7 @@ const UserCard = () => {
         </div>
         <div className="flex flex-col justify-center px-2 overflow-hidden whitespace-nowrap">
           <span className="text-gray-800 font-semibold text-base truncate">
-            it department
+            {employee.department?.name || 'N/A'}
           </span>
           <span className="text-gray-500 text-sm truncate">Department</span>
         </div>
@@ -41,7 +42,7 @@ const UserCard = () => {
         </div>
         <div className="flex flex-col justify-center px-2 overflow-hidden whitespace-nowrap">
           <span className="text-gray-800 font-semibold text-base truncate">
-            03/10/2025
+            {employee._createdAt ? new Date(employee._createdAt).toLocaleDateString() : 'N/A'}
           </span>
           <span className="text-gray-500 text-sm truncate">
             Joining Date
@@ -60,7 +61,7 @@ const UserCard = () => {
         </div>
         <div className="flex flex-col justify-center px-2 overflow-hidden whitespace-nowrap">
           <span className="text-gray-800 font-semibold text-base truncate">
-            Ui / Ux designer
+            {employee.position || 'N/A'}
           </span>
           <span className="text-gray-500 text-sm truncate">
             Designation
