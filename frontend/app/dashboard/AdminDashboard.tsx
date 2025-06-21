@@ -8,13 +8,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
   ResponsiveContainer,
 } from "recharts";
 import { getEmployees } from "@/lib/sanity/utils/employee";
-import { useSession } from "next-auth/react";
 
 interface AdminDashboardProps {
   session: any;
@@ -24,8 +20,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
   const [employeeStats, setEmployeeStats] = useState({
     total: 0,
     active: 0,
-    wfh: 0,
-    absent: 0,
+    terminated: 0,
+    onLeave: 0,
   });
 
   const attendanceData = [
@@ -38,13 +34,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
     { name: "Sun", Present: 8, Absent: 0, Off: 0 },
   ];
 
-  const pieData = [
-    { name: "P1", value: 5 },
-    { name: "P2", value: 5 },
-    { name: "P3", value: 5 },
-    { name: "P4", value: 5 },
-    { name: "P5", value: 5 },
-  ];
 
   const leaveSummary = {
     available: 8,
@@ -59,11 +48,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
       const active = employees.filter(
         (e) => e.employmentStatus === "active"
       ).length;
-      const wfh = employees.filter((e) => e.employmentStatus === "wfh").length;
-      const absent = employees.filter(
+      const terminated = employees.filter((e) => e.employmentStatus === "Terminated").length;
+      const onLeave = employees.filter(
         (e) => e.employmentStatus === "on leave"
       ).length;
-      setEmployeeStats({ total, active, wfh, absent });
+      setEmployeeStats({ total, active, terminated, onLeave });
     }
     fetchStats();
   }, []);
@@ -83,10 +72,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
         Active: <strong>{employeeStats.active}</strong>
       </Card>
       <Card>
-        WFH: <strong>{employeeStats.wfh}</strong>
+        Terminated: <strong>{employeeStats.terminated}</strong>
       </Card>
       <Card>
-        Absent: <strong>{employeeStats.absent}</strong>
+        On Leave: <strong>{employeeStats.onLeave}</strong>
       </Card>
 
       <Card>

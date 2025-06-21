@@ -14,7 +14,6 @@ import {
 
 import { signOut } from "next-auth/react";
 
-
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -60,8 +59,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         <div className="pt-10 border-t">
           <button
-          onClick={() => signOut({ callbackUrl: "/login" })} 
-          className="flex items-center gap-2 text-red-500 hover:text-red-700 transition">
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition"
+          >
             <LogOut size={20} /> Logout
           </button>
         </div>
