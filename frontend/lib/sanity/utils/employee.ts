@@ -10,6 +10,7 @@ export async function getEmployees(): Promise<Employee[]> {
       _updatedAt,
       phone,
       photo,
+      name,
       employmentStatus,
       role->{ title },
       startDate,

@@ -32,9 +32,10 @@ export default function AddReviewModal({
   const [kpis, setKpis] = useState<KPI[]>([
     { kpi: "", target: 0, achieved: 0 },
   ]);
+  console.log("Employees:", employees);
   const options = employees.map((emp) => ({
     value: emp._id,
-    label: emp.name,
+    label: emp.name ,
   }));
 
   const selectedOption = options.find((opt) => opt.value === employeeId);
@@ -80,7 +81,7 @@ export default function AddReviewModal({
             options={options}
             value={selectedOption}
             onChange={(selected) => setRevieweeId(selected?.value || "")}
-            className="text-sm"
+            className="text-sm text-black"
             isSearchable
           />
         </div>

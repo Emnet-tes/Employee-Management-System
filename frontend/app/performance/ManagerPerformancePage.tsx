@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { Performance } from "@/types/performance";
 import AddReviewModal from "@/component/AddReviewModal";
 import { getEmployees } from "@/lib/sanity/utils/employee";
-import department from "@/lib/sanity/schemas/department";
 import {Employee} from "@/types/employee";;
 
 const ManagerPerformancePage = ({ session }: { session: any }) => {
@@ -18,7 +17,7 @@ useEffect(() => {
     const employees = await getEmployees();
     const manager = employees.find(emp => emp._id === session.user.employeeId);
     const departmentEmployees = employees.filter(
-      emp => emp.department?.name === manager?.department.name && emp.role.title !== "manager"
+      emp => emp.department?.name === manager?.department.name && emp.role.title !== "manager" && emp.role.title !== "admin"
     );
     setDepartmentEmployees(departmentEmployees);
     // You can now use departmentEmployees as needed
