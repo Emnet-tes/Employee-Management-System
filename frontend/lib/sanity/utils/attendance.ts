@@ -13,7 +13,12 @@ export async function getAttendances(): Promise<Attendance[]> {
         name,
         email,
         department->{
+        _id,
         name
+        },
+        role->{
+          _id,
+          title
         }
       },
       date,
@@ -36,6 +41,13 @@ export async function getAttendanceById(
         _id,
         name,
         email,
+        department->{
+          name
+        },  
+        role->{
+          _id,
+          title
+        }
       },
       date,
       checkIn,
@@ -45,14 +57,12 @@ export async function getAttendanceById(
     { id }
   );
 }
-
 export async function getAttendancesByEmployeeId(
   employeeId: string,
   date?: string // optional date filter
 ): Promise<Attendance[] | null> {
-  const filter = groq`*[_type == "attendance" && employee._ref == $employeeId ${
-    date ? "&& date == $date" : ""
-  }]{
+  const filter = groq`*[_type == "attendance" && employee._ref == $employeeId ${date ? "&& date == $date" : ""
+    }]{
     _id,
     _createdAt,
     _updatedAt,
@@ -60,7 +70,13 @@ export async function getAttendancesByEmployeeId(
       _id,
       name,
       email,
-      department,
+      department->{
+        _id,
+        name},
+      role->{
+      _id,
+      title
+      }
     },
     date,
     checkIn,
@@ -68,7 +84,7 @@ export async function getAttendancesByEmployeeId(
     status
   }`;
 
-  const params: Record<string, any> = { employeeId };
+  const params: Record<string, string> = { employeeId };
   if (date) params.date = date;
 
   return client.fetch(filter, params);
@@ -78,7 +94,7 @@ export async function getAttendancesByEmployeeId(
 export async function createAttendance(
   attendance: AttendanceInput
 ): Promise<Attendance | null> {
-  console.log("token",process.env.SANITY_API_TOKEN)
+  console.log("token", process.env.SANITY_API_TOKEN)
   const newDoc = await client.create({
     _type: "attendance",
     employee: { _type: "reference", _ref: attendance.employeeId },
@@ -96,19 +112,21 @@ export async function updateAttendance(
   id: string,
   attendance: AttendanceInput
 ): Promise<Attendance | null> {
-  try{const updatedDoc = await client.patch(id)
-    .set({
-      checkOut: attendance.checkOut || null,
-      status: attendance.status || "Absent",
-    })
-    .commit();
+  try {
+    const updatedDoc = await client.patch(id)
+      .set({
+        checkOut: attendance.checkOut || null,
+        status: attendance.status || "Absent",
+      })
+      .commit();
 
-  // Fetch the populated attendance with expanded employee
-  return getAttendanceById(updatedDoc._id);}
+    // Fetch the populated attendance with expanded employee
+    return getAttendanceById(updatedDoc._id);
+  }
   catch (error) {
-  console.error("Error updating attendance:", error);
-  return null;  
-}
+    console.error("Error updating attendance:", error);
+    return null;
+  }
 }
 export async function deleteAttendance(id: string): Promise<void> {
   await client.delete(id);

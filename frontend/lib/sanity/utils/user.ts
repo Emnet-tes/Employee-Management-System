@@ -1,5 +1,5 @@
 import { client } from "../client";
-import { User } from "@/types/user"; // Define this TypeScript type accordingly
+import { User } from "@/types/user"; 
 import bcrypt from "bcryptjs";
 type CreateUserInput = {
   email: string;
@@ -87,7 +87,7 @@ export async function updateUser(
     name?: string;
   }
 ): Promise<User> {
-  const patch: Record<string, any> = {};
+  const patch: Record<string, unknown> = {};
 
   // Check for duplicate email
   if (updates.email) {

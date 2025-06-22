@@ -10,7 +10,12 @@ export type Attendance = {
     _id: string;
     name: string;
     email: string;
+    role: {
+      _id: string;
+      title: string;
+    }
     department?: {
+      _id: string;
       name: string;
     } | null;
   };
