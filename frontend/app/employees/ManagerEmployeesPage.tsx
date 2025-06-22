@@ -4,12 +4,27 @@ import {
   getEmployeesByUserId,
 } from "@/lib/sanity/utils/employee";
 import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
-import { buildImageUrl } from "./imageUrlBuilder";
+import { useEffect, useMemo, useState } from "react";
+import Loading from "../_component/Loading";
+import { Employee } from "@/types/employee";
+import { getEmployeeColumns } from "./EmployeeColumns";
+import Table from "../_component/Table";
+
+
+
 
 export default function ManagerEmployeesPage({ id }: { id: string }) {
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+
+    const columns = useMemo(
+      () =>
+        getEmployeeColumns(
+          {showActions: false 
+
+          }),
+      []
+    );
 
   useEffect(() => {
     async function fetchData() {
@@ -19,16 +34,19 @@ export default function ManagerEmployeesPage({ id }: { id: string }) {
       }
       // Fetch manager's employee record
       const managerEmployee = await getEmployeesByUserId(id);
+      console.log("Manager Employee:", managerEmployee);
       const managerDept =
-        managerEmployee?.department?._id || managerEmployee?.department; // adjust as per your data shape
+        managerEmployee?.department?._id ;
 
       // Fetch all employees
       const allEmployees = await getEmployees();
+      console.log("All Employees:", allEmployees);
       // Filter by department
       const filtered = allEmployees.filter(
-        (e: any) =>
-          e.department?._id === managerDept || e.department === managerDept
+        (e:Employee) =>
+          e.department?._id === managerDept 
       );
+      console.log("Filtered Employees:", filtered);
       setEmployees(filtered);
       setLoading(false);
     }
@@ -36,58 +54,14 @@ export default function ManagerEmployeesPage({ id }: { id: string }) {
   }, [id]);
 
   if (loading) {
-    return <div className="p-4">Loading...</div>;
+    return <Loading/>
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">Employees</h1>
+    <div className="container mx-auto p-6 text-black">
+      <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <h2 className="text-2xl font-semibold p-6 border-b text-gray-700">
-          Employee Directory
-        </h2>
-
-        <div className="divide-y">
-          {employees.map((employee: any) => (
-            <div
-              key={employee._id}
-              className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-gray-50 transition"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={
-                    employee.photo?.asset?._ref
-                      ? buildImageUrl(employee.photo.asset._ref)
-                      : "/loginImage.png"
-                  }
-                  alt="Employee"
-                  className="w-16 h-16 rounded-full object-cover border shadow-sm"
-                />
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {employee.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">{employee.email}</p>
-                  <p className="text-sm text-gray-600">{employee.phone}</p>
-                </div>
-              </div>
-
-              <div className="text-sm text-gray-600 sm:text-right">
-                <p>
-                  <span className="font-medium text-gray-700">Role:</span>{" "}
-                  {employee.role?.title || "N/A"}
-                </p>
-                <p>
-                  <span className="font-medium text-gray-700">Department:</span>{" "}
-                  {employee.department?.name || "N/A"}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Table data={employees} columns={columns} />
     </div>
   );
 }
