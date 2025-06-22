@@ -1,3 +1,6 @@
+import { client } from "@/lib/sanity/client";
+import imageUrlBuilder from "@sanity/image-url";
+
 export function calculateWorkHours(
   checkIn: string | undefined,
   checkOut: string | undefined
@@ -19,4 +22,23 @@ export function calculateWorkHours(
   const minutes = diffMinutes % 60;
 
   return `${hours}h ${minutes}m`;
+}
+
+
+export function buildImageUrl(
+  imageAsset: string | { _type: string; asset: { _ref: string } }
+) {
+  const builder = imageUrlBuilder(client);
+  return builder.image(imageAsset).url();
+}
+
+export function timeDifference(
+  startDate: string | Date,
+  endDate: string | Date
+): number {
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const timeDiff = end.getTime() - start.getTime();
+  return timeDiff
 }

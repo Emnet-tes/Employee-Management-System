@@ -1,79 +1,168 @@
-'use client'
+"use client";
+
 import { getAllDepartments } from "@/lib/sanity/utils/department";
 import { getEmployees } from "@/lib/sanity/utils/employee";
 import { getAllRoles } from "@/lib/sanity/utils/role";
-import { Pencil, Trash2, X } from "lucide-react";
-import Image from "next/image";
-import React, { useEffect, useState } from 'react';
-import { buildImageUrl } from "./imageUrlBuilder";
+import { X } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import Loading from "../_component/Loading";
+
+
+import { getEmployeeColumns } from "./EmployeeColumns";
+import Table from "../_component/Table";
+import { Employee } from "@/types/employee";
+import { Role } from "@/types/role";
+import { Department } from "@/types/department";
+
 const EmployeeTab = () => {
-      const [employees, setEmployees] = useState<any[]>([]);
-      const [roles, setRoles] = useState<any[]>([]);
-      const [departments, setDepartments] = useState<any[]>([]);
-      const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
-      const [showEditModal, setShowEditModal] = useState(false);
-      const [editForm, setEditForm] = useState<any>({});
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  interface EmployeeFormState {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+    departmentId?: string;
+    roleId?: string;
+    startDate?: string;
+    employmentStatus?: string;
+  }
+  const [formState, setFormState] = useState<EmployeeFormState>({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-      const [loading, setLoading] = useState(true);
-    useEffect(() => {
-      async function fetchData() {
-        setLoading(true);
-        const [emp, roleList, deptList] = await Promise.all([
-          getEmployees(),
-          getAllRoles(),
-          getAllDepartments(),
-        ]);
-        setEmployees(emp || []);
-        setRoles(roleList || []);
-        setDepartments(deptList || []);
-        setLoading(false);
-      }
-      fetchData();
-    }, []);
-    async function uploadToServer(file: File, type: "image" | "file") {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", type);
+  const columns = useMemo(
+    () =>
+      getEmployeeColumns({
+        showActions: true, 
+        onEdit: openModal,
+        onDelete: handleDelete,
+      }),
+    []
+  );
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        alert("Failed to upload file");
-        return;
-      }
-
-      return await res.json(); // Sanity asset document
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [emp, roleList, deptList] = await Promise.all([
+        getEmployees(),
+        getAllRoles(),
+        getAllDepartments(),
+      ]);
+      setEmployees(emp || []);
+      setRoles(roleList || []);
+      setDepartments(deptList || []);
+      setLoading(false);
     }
+    fetchData();
+  }, []);
 
-    async function handleAddEmployee(formData: FormData) {
-      const name = formData.get("name") as string;
-      const email = formData.get("email") as string;
-      const phone = formData.get("phone") as string;
-      const position = formData.get("position") as string;
-      const departmentId = formData.get("departmentId") as string;
-      const roleId = formData.get("roleId") as string;
+  async function uploadToServer(file: File, type: "image" | "file") {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) return alert("Failed to upload file");
+    return await res.json();
+  }
+
+  function openModal(employee?: Employee) {
+    if (employee) {
+      setEditingEmployee(employee);
+      setFormState({
+        name: employee.user?.name ?? "",
+        email: employee.user?.email ?? "",
+        phone: employee.phone ?? "",
+        position: employee.position ?? "",
+        departmentId: employee.department?._id ?? "",
+        roleId: employee.role?._id ?? "",
+        startDate: employee.startDate ?? "",
+        employmentStatus: employee.employmentStatus ?? "active",
+      });
+      setIsEditMode(true);
+    } else {
+      setEditingEmployee(null);
+      setFormState({});
+      setIsEditMode(false);
+    }
+    setShowModal(true);
+  }
+
+  function closeModal() {
+    setShowModal(false);
+    setEditingEmployee(null);
+    setFormState({});
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    if (isEditMode && editingEmployee) {
+      try {
+        const EmpRes = await fetch(`/api/employee/${editingEmployee._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: editingEmployee.user._id,
+            roleId: formState.roleId as string,
+            name: formState.name as string,
+            phone: formState.phone as string,
+            photo: editingEmployee.photo,
+            employmentStatus: formState.employmentStatus as string,
+            departmentId: formState.departmentId as string,
+            position: formState.position as string,
+            startDate: formState.startDate as string,
+            documents: (editingEmployee?.documents?.map((doc) => ({
+              _type: "file",
+              asset: { _type: "reference", _ref: doc.asset?._ref },
+              _key: doc._key,
+            })) ?? []) as {
+              _type: "file";
+              asset: { _type: "reference"; _ref: string };
+              _key: string;
+            }[],
+          }),
+        });
+        if (!EmpRes.ok) throw new Error();
+        const updatedEmp = await EmpRes.json();
+        setEmployees((prev) =>
+          prev.map((emp) => (emp._id === updatedEmp._id ? updatedEmp : emp))
+        );
+        closeModal();
+      } catch {
+        alert("Failed to update employee");
+      }
+    } else {
+      const form = e.currentTarget;
+      const data = new FormData(form);
+      const name = data.get("name") as string;
+      const email = data.get("email") as string;
+      const phone = data.get("phone") as string;
+      const position = data.get("position") as string;
+      const departmentId = data.get("departmentId") as string;
+      const roleId = data.get("roleId") as string;
       const startDate = new Date().toISOString().slice(0, 10);
 
-      const photoFile = formData.get("photo") as File;
-      const documentFiles = formData.getAll("documents") as File[];
+      const photoFile = data.get("photo") as File;
+      const documentFiles = data.getAll("documents") as File[];
 
-      let uploadedPhoto = undefined;
-      if (photoFile && photoFile.size > 0) {
-        uploadedPhoto = await uploadToServer(photoFile, "image");
-      }
-
-      let uploadedDocs = [];
+      const uploadedPhoto =
+        photoFile.size > 0
+          ? await uploadToServer(photoFile, "image")
+          : undefined;
+      const uploadedDocs = [];
       for (const doc of documentFiles) {
         if (doc.size > 0) {
-          const uploaded = await uploadToServer(doc, "file");
-          uploadedDocs.push(uploaded);
+          uploadedDocs.push(await uploadToServer(doc, "file"));
         }
       }
 
-      // 1. Create user via API
       const userRes = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,515 +173,175 @@ const EmployeeTab = () => {
           roleId,
         }),
       });
-
-      if (!userRes.ok) {
-        alert("Email aleady exists or invalid data");
-        return;
-      }
+      if (!userRes.ok) return alert("Email already exists or invalid");
 
       const user = await userRes.json();
-
-      // 2. Create employee via API
-      if (user && user._id) {
-        const empRes = await fetch("/api/employee", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user._id,
-            roleId,
-            name,
-            phone,
-            photo: {
-              _type: "image",
-              asset: {
-                _type: "reference",
-                _ref: uploadedPhoto?._id || "",
-              },
-            },
-            employmentStatus: "active",
-            departmentId,
-            position,
-            startDate,
-            documents: uploadedDocs.map((doc) => ({
-              _type: "file",
-              asset: {
-                _type: "reference",
-                _ref: doc._id,
-              },
-              _key: doc._id,
-            })),
-          }),
-        });
-        if (!empRes.ok) {
-          console.error("Employee creation failed");
-          return;
-        }
-      }
-
-      const emp = await getEmployees();
-
-      setEmployees(emp || []);
-    }
-
-    function openEditModal(employee: any) {
-      setEditingEmployee(employee);
-      console.log("Editing employee:", employee);
-      setEditForm({
-        name: employee.user?.name ?? "",
-        phone: employee.phone ?? "",
-        position: employee.position ?? "",
-        departmentId: employee.department?._id ?? "",
-        roleId: employee.role?._id ?? "",
-        startDate: employee.startDate ?? "",
-        employmentStatus: employee.employmentStatus ?? "",
+      const empRes = await fetch("/api/employee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id,
+          roleId,
+          name,
+          phone,
+          photo: uploadedPhoto
+            ? {
+                _type: "image",
+                asset: { _type: "reference", _ref: uploadedPhoto._id },
+              }
+            : undefined,
+          employmentStatus: "active",
+          departmentId,
+          position,
+          startDate,
+          documents: uploadedDocs.map((doc) => ({
+            _type: "file",
+            asset: { _type: "reference", _ref: doc._id },
+            _key: doc._id,
+          })),
+        }),
       });
-      setShowEditModal(true);
-    }
 
-    function closeEditModal() {
-      setShowEditModal(false);
-      setEditingEmployee(null);
-      setEditForm({});
+      if (!empRes.ok) return alert("Failed to create employee");
     }
+    const emp = await getEmployees();
+    setEmployees(emp || []);
+    closeModal();
+    setLoading(false);
+  }
 
-    async function handleEditEmployeeSubmit(e: React.FormEvent) {
-      e.preventDefault();
-      if (!editingEmployee) return;
-      try {
-        const EmpRes = await fetch(`/api/employee/${editingEmployee._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: editingEmployee.user._id,
-            roleId: editForm.roleId,
-            name: editForm.name,
-            phone: editForm.phone,
-            photo: editingEmployee.photo,
-            employmentStatus: editForm.employmentStatus,
-            departmentId: editForm.departmentId,
-            position: editForm.position,
-            startDate: editForm.startDate,
-            documents: editingEmployee.documents.map((doc: any) => ({
-              _type: "file",
-              asset: {
-                _type: "reference",
-                _ref: doc.asset._ref,
-              },
-              _key: doc._key,
-            })),
-          }),
-        });
-        if (!EmpRes.ok) {
-          alert("Failed to update employee");
-          return;
-        }
-        const updatedEmp = await EmpRes.json();
-        setEmployees((prev) =>
-          prev.map((emp) =>
-            emp._id === updatedEmp._id ? updatedEmp : emp
-          )
-        );
-        closeEditModal();
-      } catch (error) {
-        console.error("Error updating employee:", error);
-        alert("Failed to update employee");
-      }
-    }
+  async function handleDelete(employeeId: string, userId: string) {
+    if (!window.confirm("Are you sure?")) return;
+    setLoading(true);
+    await fetch(`/api/user/${userId}`, { method: "DELETE" });
+    await fetch(`/api/employee/${employeeId}`, { method: "DELETE" });
+    const emp = await getEmployees();
+    setEmployees(emp || []);
+    setLoading(false);
+  }
 
-    async function handleDeleteEmployee(employeeId: string, userId: string) {
-      if (!window.confirm("Are you sure you want to delete this employee?")) {
-        return;
-      }
-      setLoading(true);
-      // 2. Delete user via API
-      if (userId) {
-        const userRes = await fetch(`/api/user/${userId}`, {
-          method: "DELETE",
-        });
-        if (!userRes.ok) {
-          alert("Failed to delete user");
-          setLoading(false);
-          return;
-        }
-      }
-     
-      try {
-        const res = await fetch(`/api/employee/${employeeId}`, {
-          method: "DELETE",
-        });
-        if (!res.ok) {
-          alert("Failed to delete employee");
-          setLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.error("Error deleting employee:", error);
-        alert("Failed to delete employee");
-        setLoading(false);
-        return;
-      }
+  if (loading) return <Loading />;
 
-      setLoading(false);
-      const emp = await getEmployees();
-      setEmployees(emp || []);
-    }
-    if (loading) {
-      return <div className="p-4">Loading...</div>;
-    }
   return (
     <div className="p-6 space-y-6">
-      {/* Edit Employee Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 h-full ">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative ">
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 min-h-screen">
+          <div className="bg-white p-6 rounded-xl w-full max-w-lg relative">
             <button
-              className="absolute top right-2 text-gray-400 hover:text-gray-600"
-              onClick={closeEditModal}
-              aria-label="Close"
+              className="absolute top-2 right-2 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={closeModal}
             >
-              <X size={24} />
+              <X />
             </button>
-            <h2 className="text-xl font-semibold mb-4">Edit Employee</h2>
-            <form onSubmit={handleEditEmployeeSubmit} className="space-y-4">
-              <div>
+            <h2 className="text-xl font-semibold mb-4">
+              {isEditMode ? "Edit Employee" : "Add Employee"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                name="name"
+                defaultValue={formState.name}
+                placeholder="Name"
+                required
+                className="input-style w-full border rounded-md p-2"
+              />
+              <input
+                name="email"
+                defaultValue={formState.email}
+                placeholder="Email"
+                type="email"
+                required
+                className="input-style w-full border rounded-md p-2"
+                disabled={isEditMode}
+              />
+              <input
+                name="phone"
+                defaultValue={formState.phone}
+                placeholder="Phone"
+                required
+                className="input-style w-full border rounded-md p-2"
+              />
+              <input
+                name="position"
+                defaultValue={formState.position}
+                placeholder="Position"
+                required
+                className="input-style w-full border rounded-md p-2"
+              />
+              <select
+                name="roleId"
+                defaultValue={formState.roleId}
+                required
+                className="input-style w-full border rounded-md p-2"
+              >
+                <option value="">Select Role</option>
+                {roles.map((r) => (
+                  <option key={r._id} value={r._id}>
+                    {r.title}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="departmentId"
+                defaultValue={formState.departmentId}
+                required
+                className="input-style w-full border rounded-md p-2"
+              >
+                <option value="">Select Department</option>
+                {departments.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+              {!isEditMode && (
+                <>
                 <label className="block text-sm font-medium text-gray-700">
-                  Name
+                  Photo
                 </label>
-                <input
-                  type="text"
-                  value={editForm.name ?? ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({ ...f, name: e.target.value }))
-                  }
-                  className="input-style w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={editForm.phone ?? ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({ ...f, phone: e.target.value }))
-                  }
-                  className="input-style w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Position
-                </label>
-                <input
-                  type="text"
-                  value={editForm.position ?? ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({
-                      ...f,
-                      position: e.target.value,
-                    }))
-                  }
-                  className="input-style w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Role
-                </label>
-                <select
-                  value={editForm.roleId ?? ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({ ...f, roleId: e.target.value }))
-                  }
-                  className="input-style w-full"
-                >
-                  <option value="">Select a role</option>
-                  {roles.map((role: any) => (
-                    <option key={role._id} value={role._id}>
-                      {role.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Department
-                </label>
-                <select
-                  value={editForm.departmentId ?? ""}
-                  onChange={(e) =>
-                    setEditForm((f: any) => ({
-                      ...f,
-                      departmentId: e.target.value,
-                    }))
-                  }
-                  className="input-style w-full"
-                >
-                  <option value="">Select a department</option>
-                  {departments.map((dept: any) => (
-                    <option key={dept._id} value={dept._id}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
-                  onClick={closeEditModal}
-                >
-                  Cancel
-                </button>
+                  <input
+                    name="photo"
+                    type="file"
+                    accept="image/*"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    required
+                  />
+                  <label className="block text-sm font-medium text-gray-700 mt-4">
+                    Documents
+                  </label>
+                  <input
+                    name="documents"
+                    type="file"
+                    multiple
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    required
+                  />
+                </>
+              )}
+              <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
-                  Save
+                  {isEditMode ? "Update" : "Create"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      {/* Employee List */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <h2 className="text-2xl font-semibold px-6 py-4 border-b text-gray-800">
-          Employees List
-        </h2>
 
-        <div className="divide-y">
-          {employees.map((employee: any) => (
-            <div
-              key={employee._id}
-              className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
-            >
-              {/* Left: Photo + Info */}
-              <div className="flex items-center gap-4">
-                <Image
-                  src={
-                    employee.photo?.asset?._ref
-                      ? buildImageUrl(employee.photo.asset._ref)
-                      : "/loginImage.png"
-                  }
-                  alt="Employee Photo"
-                  width={60}
-                  height={60}
-                  className="rounded-full object-cover border shadow-sm"
-                />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {employee.user?.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {employee.user?.email}
-                  </p>
-                  <p className="text-sm text-gray-600">{employee.phone}</p>
-                  <p className="text-sm text-gray-500">
-                    <span className="font-medium text-gray-700">Role:</span>{" "}
-                    {employee.role?.title || "N/A"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    <span className="font-medium text-gray-700">
-                      Department:
-                    </span>{" "}
-                    {employee.department?.name || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => openEditModal(employee)}
-                  title="Edit"
-                  className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full text-blue-600 transition"
-                >
-                  <Pencil size={18} />
-                </button>
-                <button
-                  onClick={() =>
-                    handleDeleteEmployee(employee._id, employee.user?._id)
-                  }
-                  title="Delete"
-                  className="p-2 bg-red-100 hover:bg-red-200 rounded-full text-red-600 transition"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Create Employee Form */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add New Employee</h2>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const formData = new FormData(form);
-            await handleAddEmployee(formData);
-            form.reset(); // Reset the form after submission
-          }}
-          className="space-y-4"
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Employees</h2>
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={() => openModal()}
         >
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              placeholder="Enter full name"
-              className="input-style"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              placeholder="Enter email address"
-              className="input-style"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Phone
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              required
-              placeholder="Enter phone number"
-              className="input-style"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="roleId"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Role
-            </label>
-            <select id="roleId" name="roleId" required className="input-style">
-              <option value="">Select a role</option>
-              {roles.map((role: any) => (
-                <option key={role._id} value={role._id}>
-                  {role.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="departmentId"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Department
-            </label>
-            <select
-              id="departmentId"
-              name="departmentId"
-              required
-              className="input-style"
-            >
-              <option value="">Select a department</option>
-              {departments.map((dept: any) => (
-                <option key={dept._id} value={dept._id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="position"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Position
-            </label>
-            <input
-              id="position"
-              name="position"
-              type="text"
-              required
-              placeholder="Enter position title"
-              className="input-style"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="photo"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Photo
-            </label>
-            <input
-              id="photo"
-              name="photo"
-              type="file"
-              accept="image/*"
-              className="input-style"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="documents"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Documents
-            </label>
-            <input
-              id="documents"
-              name="documents"
-              type="file"
-              accept=".pdf,.doc,.docx,.png,.jpg"
-              multiple
-              className="input-style"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            aria-label="Add new employee"
-            title="Add Employee"
-          >
-            Add Employee
-          </button>
-        </form>
+          Add Employee
+        </button>
       </div>
+      <Table data={employees} columns={columns} />
     </div>
   );
-}
+};
 
-export default EmployeeTab
+export default EmployeeTab;

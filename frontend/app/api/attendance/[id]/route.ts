@@ -12,8 +12,10 @@ export async function DELETE(
   try {
     await deleteAttendance(params.id);
     return new Response("Attendance deleted successfully", { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Unknown error occurred";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -28,7 +30,9 @@ export async function PATCH(
     const data = await req.json();
     const updated = await updateAttendance(id, data);
     return NextResponse.json(updated);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Unknown error occurred";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
