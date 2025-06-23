@@ -44,8 +44,8 @@ export default function LoginPage() {
         {/* Right - Form */}
         <div className="w-1/2 p-10 flex flex-col justify-center">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Welcome Back</h2>
-            <span className="text-sm text-gray-600">
+            <h2 className="text-2xl font-semibold text-black">Welcome Back</h2>
+            <span className="text-sm text-black">
               New User?{" "}
               <a href="/signup" className="text-blue-500 hover:underline">
                 Sign Up
@@ -55,10 +55,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="text-gray-600 text-sm">Email</label>
+              <label className="text-black text-sm">Email</label>
               <input
                 type="email"
-                className="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -66,10 +66,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="text-gray-600 text-sm">Password</label>
+              <label className="text-black text-sm">Password</label>
               <input
                 type="password"
-                className="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -85,7 +85,7 @@ export default function LoginPage() {
               >
                 Login →
               </button>
-              <a href="#" className="text-gray-500 hover:underline">
+              <a href="#" className="text-black hover:underline">
                 Forgot Password?
               </a>
             </div>

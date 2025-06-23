@@ -105,12 +105,14 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
 
       <Card className="col-span-2">
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Team Attendance Overview</h2>
+          <h2 className="text-lg font-bold mb-2 text-black">
+            Team Attendance Overview
+          </h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={attendanceData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
+              <XAxis dataKey="name" tick={{ fill: "black" }} />
+              <YAxis tick={{ fill: "black" }} />
+              <Tooltip contentStyle={{ color: "black" }} />
               <Bar dataKey="Present" fill="#4ade80" />
               <Bar dataKey="Absent" fill="#f87171" />
               <Bar dataKey="Off" fill="#a3a3a3" />
@@ -121,8 +123,8 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
 
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Quick Summary</h2>
-          <ul className="space-y-1">
+          <h2 className="text-lg font-bold mb-2 text-black">Quick Summary</h2>
+          <ul className="text-black space-y-1">
             <li>- Monitor leave requests</li>
             <li>- Review performance logs</li>
             <li>- Assist scheduling</li>

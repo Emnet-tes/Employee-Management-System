@@ -53,7 +53,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
   useEffect(() => {
     async function fetchAttendance() {
       try {
-        const records = await getAttendances(); 
+        const records = await getAttendances();
         console.log("Attendance Records:", records);
         // Group by day of week and status
         const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -108,12 +108,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
 
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Attendance Performances</h2>
+          <h2 className="text-lg font-bold mb-2 text-black">
+            Attendance Performances
+          </h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={attendanceData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
+              <XAxis dataKey="name" tick={{ fill: "black" }} />
+              <YAxis tick={{ fill: "black" }} />
+              <Tooltip contentStyle={{ color: "black" }} />
               <Bar dataKey="Present" fill="#4ade80" />
               <Bar dataKey="Absent" fill="#f87171" />
               <Bar dataKey="on leave" fill="#a3a3a3" />
@@ -124,8 +126,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
 
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Leave Summary</h2>
-          <ul>
+          <h2 className="text-lg font-bold mb-2 text-black">Leave Summary</h2>
+          <ul className="text-black">
             <li>Available: {leaveSummary.available}</li>
             <li>Taken: {leaveSummary.taken}</li>
             <li>Annual: {leaveSummary.annual}</li>

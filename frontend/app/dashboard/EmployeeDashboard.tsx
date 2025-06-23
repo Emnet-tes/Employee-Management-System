@@ -64,11 +64,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
   }, [session]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 text-black">
       {/* Attendance History */}
       <Card className="col-span-1 lg:col-span-2">
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">
+          <h2 className="text-lg font-bold mb-2 text-black">
             My Attendance (Last 2 Weeks)
           </h2>
           <div className="grid grid-cols-7 gap-2">
@@ -95,8 +95,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
       {/* Leave Summary */}
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Leave Summary</h2>
-          <ul>
+          <h2 className="text-lg font-bold mb-2 text-black">Leave Summary</h2>
+          <ul className="text-black">
             <li>Available: {leaveSummary.available}</li>
             <li>Taken: {leaveSummary.taken}</li>
             <li>Annual: {leaveSummary.annual}</li>
@@ -107,9 +107,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
       {/* Performance Overview */}
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Performance Overview</h2>
+          <h2 className="text-lg font-bold mb-2 text-black">
+            Performance Overview
+          </h2>
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-black">Loading...</p>
           ) : reviews && reviews.length > 0 ? (
             <div>
               <p>
@@ -122,16 +124,18 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
                 <strong>Feedback:</strong> {reviews[0].feedback}
               </p>
               <div className="mt-2">
-                <p className="font-semibold">Goals:</p>
-                <ul className="list-disc list-inside">
+                <p className="font-semibold text-black">Goals:</p>
+                <ul className="list-disc list-inside text-black">
                   {reviews[0].goals?.map((goal: string, i: number) => (
-                    <li key={i}>{goal}</li>
+                    <li key={i} className="text-black">
+                      {goal}
+                    </li>
                   ))}
                 </ul>
               </div>
             </div>
           ) : (
-            <p>No performance data available.</p>
+            <p className="text-black">No performance data available.</p>
           )}
         </CardContent>
       </Card>
