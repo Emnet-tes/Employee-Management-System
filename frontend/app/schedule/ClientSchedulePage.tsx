@@ -1,118 +1,121 @@
-
 "use client";
+
 import { useEffect, useState } from "react";
 import { getAllSchedules, createSchedule } from "@/lib/sanity/utils/schedule";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { getEmployees } from "@/lib/sanity/utils/employee";
 import { Card, CardContent } from "@/component/card";
 import { Schedule } from "@/types/schedule";
+import { Employee } from "@/types/employee";
+import AssignScheduleModal from "@/component/AssignScheduleModal";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import Loading from "../_component/Loading";
 
 export default function ClientSchedulePage({ session }: { session: any }) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>(
+    []
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     employeeId: "",
     shift: "",
     date: "",
+    startTime: "",
+    endTime: "",
     notes: "",
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadSchedules() {
       const data = await getAllSchedules();
       setSchedules(data);
     }
-    loadSchedules();
-  }, []);
+    async function loadEmployees() {
+      const data = await getEmployees();
+      setEmployees(data);
+      if (session?.user?.role === "manager") {
+        const manager = data.find((emp) => emp._id === session.user.employeeId);
+        const deptEmps = data.filter(
+          (emp) =>
+            emp.department?.name === manager?.department?.name &&
+            emp.role.title !== "manager" &&
+            emp.role.title !== "admin"
+        );
+        setDepartmentEmployees(deptEmps);
+      }
+    }
+    Promise.all([loadSchedules(), loadEmployees()]).finally(() =>
+      setLoading(false)
+    );
+  }, [session]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     await createSchedule(formData);
     alert("Schedule created!");
+    setFormData({
+      employeeId: "",
+      shift: "",
+      date: "",
+      startTime: "",
+      endTime: "",
+      notes: "",
+    });
+    getAllSchedules().then(setSchedules);
   };
 
-  console.log("Client session:", session);
+  const filteredSchedules =
+    session?.user?.role === "employee"
+      ? schedules.filter((s) => s.employee?._id === session.user.employeeId)
+      : schedules;
+
+  const calendarEvents = filteredSchedules.map((sched) => ({
+    title: `${sched.employee?.name || "N/A"} - ${sched.shift}`,
+    date: sched.date,
+  }));
+
+  if (loading) return <Loading />;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-      {(session?.user?.role === "admin" || session?.user?.role === "manager") && (
-        <Card>
-          <CardContent>
-            <h2 className="font-bold mb-2">Assign Work Schedule</h2>
-            <form onSubmit={handleSubmit} className="space-y-2">
-              <input
-                type="text"
-                placeholder="Employee ID"
-                value={formData.employeeId}
-                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                className="border p-2 w-full"
-              />
-              <input
-                type="text"
-                placeholder="Shift"
-                value={formData.shift}
-                onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
-                className="border p-2 w-full"
-              />
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="border p-2 w-full"
-              />
-              <textarea
-                placeholder="Notes"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="border p-2 w-full"
-              />
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-                Save
-              </button>
-            </form>
-          </CardContent>
-        </Card>
+    <div className="grid grid-cols-1 gap-4 p-4 text-black">
+      {(session?.user?.role === "admin" ||
+        session?.user?.role === "manager") && (
+        <div className="flex justify-end max-h-12">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer"
+            onClick={() => setIsModalOpen(true)}
+          >
+            Assign Schedule
+          </button>
+          <AssignScheduleModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            employees={
+              session?.user?.role === "manager"
+                ? departmentEmployees
+                : employees
+            }
+            onSuccess={() => {
+              getAllSchedules().then(setSchedules);
+            }}
+          />
+        </div>
       )}
 
       <Card>
         <CardContent>
-          <h2 className="font-bold mb-2">Scheduled Shifts</h2>
-          <table className="w-full text-left border">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Employee</th>
-                <th>Shift</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedules.map((sched: any) => (
-                <tr key={sched._id}>
-                  <td>{sched.date}</td>
-                  <td>{sched.employee?.name || "N/A"}</td>
-                  <td>{sched.shift}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
-      <Card className="col-span-2">
-        <CardContent>
-          <h2 className="font-bold mb-2">Timesheet Overview</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={schedules.map((s) => ({
-                date: s.date,
-                value: 1,
-                label: s.shift,
-              }))}
-            >
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#60a5fa" />
-            </BarChart>
-          </ResponsiveContainer>
+          <h2 className="font-bold mb-4 text-lg text-black">Shift Calendar</h2>
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            events={calendarEvents}
+            height={600}
+            eventDisplay="block"
+          />
         </CardContent>
       </Card>
     </div>

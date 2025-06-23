@@ -4,30 +4,36 @@ import React, { useEffect, useState } from "react";
 import { Performance } from "@/types/performance";
 import AddReviewModal from "@/component/AddReviewModal";
 import { getEmployees } from "@/lib/sanity/utils/employee";
-import department from "@/lib/sanity/schemas/department";
-import {Employee} from "@/types/employee";;
+import { Employee } from "@/types/employee";
+import Loading from "../_component/Loading";
 
 const ManagerPerformancePage = ({ session }: { session: any }) => {
   const [reviews, setReviews] = useState<Performance[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>([]);
+  const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>(
+    []
+  );
 
-useEffect(() => {
-  const fetchEmployees = async () => {
-    const employees = await getEmployees();
-    const manager = employees.find(emp => emp._id === session.user.employeeId);
-    const departmentEmployees = employees.filter(
-      emp => emp.department?.name === manager?.department.name && emp.role.title !== "manager"
-    );
-    setDepartmentEmployees(departmentEmployees);
-    // You can now use departmentEmployees as needed
-    console.log("Department Employees:", departmentEmployees);
-    console.log("Manager:", manager?.department?.name);
-  };
-  fetchEmployees();
-}, []);
-  
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const employees = await getEmployees();
+      const manager = employees.find(
+        (emp) => emp._id === session.user.employeeId
+      );
+      const departmentEmployees = employees.filter(
+        (emp) =>
+          emp.department?.name === manager?.department.name &&
+          emp.role.title !== "manager" &&
+          emp.role.title !== "admin"
+      );
+      setDepartmentEmployees(departmentEmployees);
+      // You can now use departmentEmployees as needed
+      console.log("Department Employees:", departmentEmployees);
+      console.log("Manager:", manager?.department?.name);
+    };
+    fetchEmployees();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +57,7 @@ useEffect(() => {
   if (loading) return <p className="p-4">Loading performance data...</p>;
 
   if (reviews.length === 0) {
-    return <p className="p-4">No reviews created by you yet.</p>;
+    return <Loading />;
   }
 
   return (
@@ -60,7 +66,7 @@ useEffect(() => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         employeeId={session.user.employeeId}
-        employees = {departmentEmployees}
+        employees={departmentEmployees}
       />
       <div className="mb-4 flex justify-end">
         <button
@@ -73,39 +79,45 @@ useEffect(() => {
       <table className="min-w-full table-auto border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
-            <th className="border px-4 py-2">Employee</th>
-            <th className="border px-4 py-2">Date</th>
-            <th className="border px-4 py-2">Rating</th>
-            <th className="border px-4 py-2">Goals</th>
-            <th className="border px-4 py-2">KPIs</th>
-            <th className="border px-4 py-2">Feedback</th>
+            <th className="border px-4 py-2 text-black">Employee</th>
+            <th className="border px-4 py-2 text-black">Date</th>
+            <th className="border px-4 py-2 text-black">Rating</th>
+            <th className="border px-4 py-2 text-black">Goals</th>
+            <th className="border px-4 py-2 text-black">KPIs</th>
+            <th className="border px-4 py-2 text-black">Feedback</th>
           </tr>
         </thead>
         <tbody>
           {reviews.map((review) => (
             <tr key={review._id} className="hover:bg-gray-50">
-              <td className="border px-4 py-2">{review?.employee?.name}</td>
-              <td className="border px-4 py-2">
+              <td className="border px-4 py-2 text-black">
+                {review?.employee?.name}
+              </td>
+              <td className="border px-4 py-2 text-black">
                 {new Date(review?.date).toLocaleDateString()}
               </td>
-              <td className="border px-4 py-2">{review.rating} / 10</td>
-              <td className="border px-4 py-2">
-                <ul className="list-disc list-inside">
+              <td className="border px-4 py-2 text-black">
+                {review.rating} / 10
+              </td>
+              <td className="border px-4 py-2 text-black">
+                <ul className="list-disc list-inside text-black">
                   {review?.goals?.map((goal, index) => (
-                    <li key={index}>{goal}</li>
+                    <li key={index} className="text-black">
+                      {goal}
+                    </li>
                   ))}
                 </ul>
               </td>
-              <td className="border px-4 py-2">
-                <ul className="list-disc list-inside">
+              <td className="border px-4 py-2 text-black">
+                <ul className="list-disc list-inside text-black">
                   {review?.kpis?.map((kpi, index) => (
-                    <li key={index}>
+                    <li key={index} className="text-black">
                       {kpi.kpi} - Target: {kpi.target}, Achieved: {kpi.achieved}
                     </li>
                   ))}
                 </ul>
               </td>
-              <td className="border px-4 py-2">{review.feedback}</td>
+              <td className="border px-4 py-2 text-black">{review.feedback}</td>
             </tr>
           ))}
         </tbody>

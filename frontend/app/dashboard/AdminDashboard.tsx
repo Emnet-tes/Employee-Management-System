@@ -8,13 +8,11 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
   ResponsiveContainer,
 } from "recharts";
 import { getEmployees } from "@/lib/sanity/utils/employee";
-import { useSession } from "next-auth/react";
+import { getAttendances } from "@/lib/sanity/utils/attendance";
+import Loading from "../_component/Loading";
 
 interface AdminDashboardProps {
   session: any;
@@ -24,27 +22,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
   const [employeeStats, setEmployeeStats] = useState({
     total: 0,
     active: 0,
-    wfh: 0,
-    absent: 0,
+    terminated: 0,
+    onLeave: 0,
   });
-
-  const attendanceData = [
-    { name: "Mon", Present: 6, Absent: 2, Off: 0 },
-    { name: "Tue", Present: 6, Absent: 2, Off: 0 },
-    { name: "Wed", Present: 6, Absent: 2, Off: 0 },
-    { name: "Thu", Present: 0, Absent: 0, Off: 8 },
-    { name: "Fri", Present: 6, Absent: 2, Off: 0 },
-    { name: "Sat", Present: 8, Absent: 0, Off: 0 },
-    { name: "Sun", Present: 8, Absent: 0, Off: 0 },
-  ];
-
-  const pieData = [
-    { name: "P1", value: 5 },
-    { name: "P2", value: 5 },
-    { name: "P3", value: 5 },
-    { name: "P4", value: 5 },
-    { name: "P5", value: 5 },
-  ];
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const leaveSummary = {
     available: 8,
@@ -59,14 +41,55 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
       const active = employees.filter(
         (e) => e.employmentStatus === "active"
       ).length;
-      const wfh = employees.filter((e) => e.employmentStatus === "wfh").length;
-      const absent = employees.filter(
+      const terminated = employees.filter(
+        (e) => e.employmentStatus === "Terminated"
+      ).length;
+      const onLeave = employees.filter(
         (e) => e.employmentStatus === "on leave"
       ).length;
-      setEmployeeStats({ total, active, wfh, absent });
+      setEmployeeStats({ total, active, terminated, onLeave });
     }
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    async function fetchAttendance() {
+      try {
+        const records = await getAttendances();
+        console.log("Attendance Records:", records);
+        // Group by day of week and status
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const grouped: Record<
+          string,
+          { Present: number; Absent: number; "on leave": number }
+        > = {};
+        for (const rec of records) {
+          const date = new Date(rec.date);
+          const day = days[date.getDay()];
+          if (!grouped[day])
+            grouped[day] = { Present: 0, Absent: 0, "on leave": 0 };
+          grouped[day][rec.status as "Present" | "Absent" | "on leave"] =
+            (grouped[day][rec.status as "Present" | "Absent" | "on leave"] ||
+              0) + 1;
+        }
+        // Fill missing days for chart consistency
+        const chartData = days.map((day) => ({
+          name: day,
+          Present: grouped[day]?.Present || 0,
+          Absent: grouped[day]?.Absent || 0,
+          "on leave": grouped[day]?.["on leave"] || 0,
+        }));
+        setAttendanceData(chartData);
+      } catch (err) {
+        setAttendanceData([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAttendance();
+  }, []);
+
+  if (loading) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
@@ -83,34 +106,34 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
         Active: <strong>{employeeStats.active}</strong>
       </Card>
       <Card>
-        WFH: <strong>{employeeStats.wfh}</strong>
+        Terminated: <strong>{employeeStats.terminated}</strong>
       </Card>
       <Card>
-        Absent: <strong>{employeeStats.absent}</strong>
+        On Leave: <strong>{employeeStats.onLeave}</strong>
       </Card>
 
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Attendance Performances</h2>
+          <h2 className="text-lg font-bold mb-2 text-black">
+            Attendance Performances
+          </h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={attendanceData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
+              <XAxis dataKey="name" tick={{ fill: "black" }} />
+              <YAxis tick={{ fill: "black" }} />
+              <Tooltip contentStyle={{ color: "black" }} />
               <Bar dataKey="Present" fill="#4ade80" />
               <Bar dataKey="Absent" fill="#f87171" />
-              <Bar dataKey="Off" fill="#a3a3a3" />
+              <Bar dataKey="on leave" fill="#a3a3a3" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      
-
       <Card>
         <CardContent>
-          <h2 className="text-lg font-bold mb-2">Leave Summary</h2>
-          <ul>
+          <h2 className="text-lg font-bold mb-2 text-black">Leave Summary</h2>
+          <ul className="text-black">
             <li>Available: {leaveSummary.available}</li>
             <li>Taken: {leaveSummary.taken}</li>
             <li>Annual: {leaveSummary.annual}</li>

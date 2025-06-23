@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Performance } from "@/types/performance";
+import Loading from "../_component/Loading";
 
 const AdminPerformancePage = () => {
   const [reviews, setReviews] = useState<Performance[]>([]);
@@ -24,55 +25,71 @@ const AdminPerformancePage = () => {
     fetchData();
   }, []);
 
-  if (loading) return <p className="p-4">Loading performance data...</p>;
+  if (loading) return <Loading />;
 
   return (
     <div className="p-4">
       <table className="min-w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-200">
-            <th className="border border-gray-300 px-4 py-2 text-left">Employee</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Reviewer</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Rating</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Goals</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">KPIs</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Feedback</th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              Employee
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              Reviewer
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              Date
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              Rating
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              Goals
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              KPIs
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left text-black">
+              Feedback
+            </th>
           </tr>
         </thead>
         <tbody>
           {reviews?.map((review) => (
             <tr key={review._id} className="even:bg-gray-50">
-              <td className="border border-gray-300 px-4 py-2">
+              <td className="border border-gray-300 px-4 py-2 text-black">
                 {review?.employee?.name}
               </td>
-              <td className="border border-gray-300 px-4 py-2">
+              <td className="border border-gray-300 px-4 py-2 text-black">
                 {review?.reviewer?.name}
               </td>
-              <td className="border border-gray-300 px-4 py-2">
+              <td className="border border-gray-300 px-4 py-2 text-black">
                 {new Date(review.date).toLocaleDateString()}
               </td>
-              <td className="border border-gray-300 px-4 py-2">
+              <td className="border border-gray-300 px-4 py-2 text-black">
                 {review.rating} / 10
               </td>
-              <td className="border border-gray-300 px-4 py-2">
-                <ul className="list-disc list-inside">
+              <td className="border border-gray-300 px-4 py-2 text-black">
+                <ul className="list-disc list-inside text-black">
                   {review?.goals?.map((goal, index) => (
-                    <li key={index}>{goal}</li>
+                    <li key={index} className="text-black">
+                      {goal}
+                    </li>
                   ))}
                 </ul>
               </td>
-              <td className="border border-gray-300 px-4 py-2">
-                <ul className="list-disc list-inside">
+              <td className="border border-gray-300 px-4 py-2 text-black">
+                <ul className="list-disc list-inside text-black">
                   {review?.kpis?.map((kpiObj, index) => (
-                    <li key={index}>
+                    <li key={index} className="text-black">
                       {kpiObj.kpi} - Target: {kpiObj.target}, Achieved:{" "}
                       {kpiObj.achieved}
                     </li>
                   ))}
                 </ul>
               </td>
-              <td className="border border-gray-300 px-4 py-2">
+              <td className="border border-gray-300 px-4 py-2 text-black">
                 {review.feedback}
               </td>
             </tr>

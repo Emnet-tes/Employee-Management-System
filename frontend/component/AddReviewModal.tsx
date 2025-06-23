@@ -32,9 +32,10 @@ export default function AddReviewModal({
   const [kpis, setKpis] = useState<KPI[]>([
     { kpi: "", target: 0, achieved: 0 },
   ]);
+  console.log("Employees:", employees);
   const options = employees.map((emp) => ({
     value: emp._id,
-    label: emp.name,
+    label: emp.name ,
   }));
 
   const selectedOption = options.find((opt) => opt.value === employeeId);
@@ -80,7 +81,7 @@ export default function AddReviewModal({
             options={options}
             value={selectedOption}
             onChange={(selected) => setRevieweeId(selected?.value || "")}
-            className="text-sm"
+            className="text-sm text-black"
             isSearchable
           />
         </div>
@@ -124,7 +125,7 @@ export default function AddReviewModal({
           ))}
           <button
             type="button"
-            className="text-sm text-blue-600 mt-1"
+            className="text-sm text-blue-600 mt-1 cursor-pointer"
             onClick={() => setGoals([...goals, ""])}
           >
             + Add Goal
@@ -175,7 +176,7 @@ export default function AddReviewModal({
           ))}
           <button
             type="button"
-            className="text-sm text-blue-600 mt-1"
+            className="text-sm text-blue-600 mt-1 cursor-pointer"
             onClick={() =>
               setKpis([...kpis, { kpi: "", target: 0, achieved: 0 }])
             }
@@ -189,13 +190,13 @@ export default function AddReviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 cursor-pointer"
           >
             Submit Review
           </button>

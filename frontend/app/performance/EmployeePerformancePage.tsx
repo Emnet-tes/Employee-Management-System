@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/component/card";
 import { Performance } from "@/types/performance";
+import Loading from "../_component/Loading";
 
 const EmployeePerformancePage = ({ session }: { session: any }) => {
   const [reviews, setReviews] = useState<Performance[]>([]) || [];
@@ -34,54 +35,58 @@ const EmployeePerformancePage = ({ session }: { session: any }) => {
   }, [session]);
 
   if (loading) {
-    return <p className="p-4">Loading your performance reviews...</p>;
+    return <Loading/>;
   }
 
   return (
-    <div className="p-4 grid grid-cols-1 gap-4">
-      {reviews?.map((review) => (
-        <Card key={review._id}>
-          <CardContent>
-            <h2 className="text-xl font-bold">
-              Reviewed by {review?.reviewer?.name}
-            </h2>
-            <p className="text-sm text-gray-500 mb-2">
-              On {new Date(review.date).toLocaleDateString()}
-            </p>
-
-            <div className="mb-3">
-              <h3 className="font-semibold">Rating:</h3>
-              <p>{review.rating} / 10</p>
-            </div>
-
-            <div className="mb-3">
-              <h3 className="font-semibold">Goals:</h3>
-              <ul className="list-disc list-inside">
-                {review?.goals?.map((goal, index) => (
-                  <li key={index}>{goal}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mb-3">
-              <h3 className="font-semibold">KPIs:</h3>
-              <ul className="list-disc list-inside">
-                {review?.kpis?.map((kpiObj, index) => (
-                  <li key={index}>
-                    {kpiObj.kpi} - Target: {kpiObj.target}, Achieved:{" "}
-                    {kpiObj.achieved}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold">Feedback:</h3>
-              <p>{review.feedback}</p>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="p-4 overflow-x-auto">
+      <table className="min-w-full table-auto border border-gray-300">
+        <thead className="bg-gray-200">
+          <tr>
+            <th className="border px-4 py-2 text-black">Reviewer</th>
+            <th className="border px-4 py-2 text-black">Date</th>
+            <th className="border px-4 py-2 text-black">Rating</th>
+            <th className="border px-4 py-2 text-black">Goals</th>
+            <th className="border px-4 py-2 text-black">KPIs</th>
+            <th className="border px-4 py-2 text-black">Feedback</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reviews?.map((review) => (
+            <tr key={review._id} className="hover:bg-gray-50">
+              <td className="border px-4 py-2 text-black">
+                {review?.reviewer?.name}
+              </td>
+              <td className="border px-4 py-2 text-black">
+                {new Date(review.date).toLocaleDateString()}
+              </td>
+              <td className="border px-4 py-2 text-black">
+                {review.rating} / 10
+              </td>
+              <td className="border px-4 py-2 text-black">
+                <ul className="list-disc list-inside text-black">
+                  {review?.goals?.map((goal, idx) => (
+                    <li key={idx} className="text-black">
+                      {goal}
+                    </li>
+                  ))}
+                </ul>
+              </td>
+              <td className="border px-4 py-2 text-black">
+                <ul className="list-disc list-inside text-black">
+                  {review?.kpis?.map((kpiObj, idx) => (
+                    <li key={idx} className="text-black">
+                      {kpiObj.kpi} - Target: {kpiObj.target}, Achieved:{" "}
+                      {kpiObj.achieved}
+                    </li>
+                  ))}
+                </ul>
+              </td>
+              <td className="border px-4 py-2 text-black">{review.feedback}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
