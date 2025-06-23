@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getEmployees } from "@/lib/sanity/utils/employee";
+import { getAttendances } from "@/lib/sanity/utils/attendance";
 
 interface AdminDashboardProps {
   session: any;
@@ -23,17 +24,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
     terminated: 0,
     onLeave: 0,
   });
-
-  const attendanceData = [
-    { name: "Mon", Present: 6, Absent: 2, Off: 0 },
-    { name: "Tue", Present: 6, Absent: 2, Off: 0 },
-    { name: "Wed", Present: 6, Absent: 2, Off: 0 },
-    { name: "Thu", Present: 0, Absent: 0, Off: 8 },
-    { name: "Fri", Present: 6, Absent: 2, Off: 0 },
-    { name: "Sat", Present: 8, Absent: 0, Off: 0 },
-    { name: "Sun", Present: 8, Absent: 0, Off: 0 },
-  ];
-
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
 
   const leaveSummary = {
     available: 8,
@@ -48,13 +39,50 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
       const active = employees.filter(
         (e) => e.employmentStatus === "active"
       ).length;
-      const terminated = employees.filter((e) => e.employmentStatus === "Terminated").length;
+      const terminated = employees.filter(
+        (e) => e.employmentStatus === "Terminated"
+      ).length;
       const onLeave = employees.filter(
         (e) => e.employmentStatus === "on leave"
       ).length;
       setEmployeeStats({ total, active, terminated, onLeave });
     }
     fetchStats();
+  }, []);
+
+  useEffect(() => {
+    async function fetchAttendance() {
+      try {
+        const records = await getAttendances(); 
+        console.log("Attendance Records:", records);
+        // Group by day of week and status
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const grouped: Record<
+          string,
+          { Present: number; Absent: number; "on leave": number }
+        > = {};
+        for (const rec of records) {
+          const date = new Date(rec.date);
+          const day = days[date.getDay()];
+          if (!grouped[day])
+            grouped[day] = { Present: 0, Absent: 0, "on leave": 0 };
+          grouped[day][rec.status as "Present" | "Absent" | "on leave"] =
+            (grouped[day][rec.status as "Present" | "Absent" | "on leave"] ||
+              0) + 1;
+        }
+        // Fill missing days for chart consistency
+        const chartData = days.map((day) => ({
+          name: day,
+          Present: grouped[day]?.Present || 0,
+          Absent: grouped[day]?.Absent || 0,
+          "on leave": grouped[day]?.["on leave"] || 0,
+        }));
+        setAttendanceData(chartData);
+      } catch (err) {
+        setAttendanceData([]);
+      }
+    }
+    fetchAttendance();
   }, []);
 
   return (
@@ -88,13 +116,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
               <Tooltip />
               <Bar dataKey="Present" fill="#4ade80" />
               <Bar dataKey="Absent" fill="#f87171" />
-              <Bar dataKey="Off" fill="#a3a3a3" />
+              <Bar dataKey="on leave" fill="#a3a3a3" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      
 
       <Card>
         <CardContent>

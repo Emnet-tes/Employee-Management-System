@@ -70,7 +70,6 @@ export async function getAttendancesByEmployeeId(
 
   const params: Record<string, any> = { employeeId };
   if (date) params.date = date;
-
   return client.fetch(filter, params);
 }
 
