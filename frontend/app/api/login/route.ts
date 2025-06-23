@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { client } from "@/lib/sanity/client";
 import bcrypt from "bcryptjs";
-import { client } from "@/lib/sanity/client"
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const { email, password } = await req.json();
@@ -18,11 +18,15 @@ export async function POST(req: Request) {
   const user = await client.fetch(query, { email });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Invalid credentials" },
+      { status: 401 }
+    );
   }
 
   // Remove password before sending response
-  const { password: _, ...userWithoutPassword } = user;
+  const { password: _password, ...userWithoutPassword } = user;
+  _password; 
 
   return NextResponse.json(userWithoutPassword, { status: 200 });
 }

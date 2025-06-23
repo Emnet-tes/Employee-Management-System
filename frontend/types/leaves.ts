@@ -7,17 +7,24 @@ export interface Leave {
     name: string;
     email: string;
   };
+  department: {
+    _id: string;
+    name: string;
+  };
   type: "sick" | "vacation" | "wfh";
   status: "pending" | "approved" | "rejected";
   startDate: string;
   endDate: string;
+  days: number;
   reason: string;
 }
 export interface LeaveInput {
   employeeId: string;
+  departmentId: string;
   type: "sick" | "vacation" | "wfh";
   status: "pending" | "approved" | "rejected";
   startDate: string;
   endDate: string;
+  days: number;
   reason: string;
 }

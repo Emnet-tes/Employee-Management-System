@@ -1,14 +1,19 @@
 "use client";
 
+import Loading from "@/app/_component/Loading";
+import { getAttendances } from "@/lib/sanity/utils/attendance";
+import {
+  getEmployeesByUserId,
+} from "@/lib/sanity/utils/employee";
 import { Attendance } from "@/types/attendance";
 import { useEffect, useState } from "react";
-
-import { getAttendances } from "@/lib/sanity/utils/attendance";
-
-import Loading from "@/app/_component/Loading";
 import AttendanceTable from "./AttendanceTable";
 
-export default function AdminAttendance() {
+interface Props {
+  managerId: string;
+}
+
+export default function ManagerAttendance({ managerId }: Props) {
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const lateThreshold = "09:00";
@@ -53,36 +58,35 @@ export default function AdminAttendance() {
         })()
       : "N/A";
 
-
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const attendanceData = await getAttendances();
-        console.log("attendanceData", attendanceData);
-        setAttendances(attendanceData || []);
+        const [managerRecord, allAttendances] = await Promise.all(
+          [getEmployeesByUserId(managerId), getAttendances()]
+        );
+        const managerDepartment = managerRecord?.department._id;
+        const filteredByDept = allAttendances.filter((attendance) => 
+         attendance.employee.department?._id == managerDepartment );
+        setAttendances(filteredByDept);
       } catch (error) {
-        console.error("Error fetching admin data:", error);
+        console.error("Error fetching manager data:", error);
         setAttendances([]);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, []);
-
+  }, [managerId]);
 
   if (loading) {
-    return (
-      <Loading/>
-    );
+    return <Loading />;
   }
 
   return (
     <div className="p-4 text-black">
-      <h1 className="text-2xl font-bold mb-4">Attendance Overview (Admin)</h1>
+      <h1 className="text-2xl font-bold mb-4">Attendance Overview (Manager)</h1>
       <AttendanceTable attendances={attendances} enableFilters={true} />
-
       <div className="mt-6">
         <h2 className="font-semibold mb-2">Trends</h2>
         <ul className="list-disc ml-6 text-gray-700 text-sm">

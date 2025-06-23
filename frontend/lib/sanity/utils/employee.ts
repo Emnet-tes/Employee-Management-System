@@ -15,7 +15,7 @@ export async function getEmployees(): Promise<Employee[]> {
       role->{ title },
       startDate,
       position,
-      department->{ name, description },
+      department->{_id, name, description },
       user->{
         _id,
         name,
@@ -37,7 +37,7 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
     role->{ title },
     startDate,
     position,
-    department->{ name, description },
+    department->{ _id,name, description },
     user->{
       _id,
       name,
@@ -62,13 +62,13 @@ export async function getEmployeesByUserId(id: string): Promise<Employee> {
     position,
     startDate,
     documents,
-  department->{ _id,name, description },
+    department->{ _id,name, description },
     _id,
     _createdAt,
     _updatedAt
     }`
-    const employees = await client.fetch(query, { id });
-    return employees as Employee;
+  const employees = await client.fetch(query, { id });
+  return employees as Employee;
 }
 
 
@@ -81,7 +81,7 @@ export async function createEmployee(
     _type: "employee",
     user: { _type: "reference", _ref: employee.userId },
     role: { _type: "reference", _ref: employee.roleId },
-    name: employee.name, 
+    name: employee.name,
     phone: employee.phone,
     photo: employee.photo,
     employmentStatus: employee.employmentStatus,
@@ -99,7 +99,7 @@ export async function updateEmployee(
   id: string,
   employee: Partial<EmployeeInput>
 ): Promise<Employee | null> {
-  const patchData: any = { ...employee };
+  const patchData: Record<string, unknown> = { ...employee };
 
   if (employee.userId) {
     patchData.user = { _type: "reference", _ref: employee.userId };

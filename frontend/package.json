@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "@fullcalendar/daygrid": "^6.1.17",
     "@fullcalendar/interaction": "^6.1.17",
     "@fullcalendar/react": "^6.1.17",
@@ -17,8 +18,9 @@
     "next": "15.3.3",
     "next-auth": "^4.24.11",
     "next-sanity": "^9.12.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.58.1",
     "react-select": "^5.10.1",
     "recharts": "^2.15.3",
     "sanity": "^3.92.0"

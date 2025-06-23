@@ -14,10 +14,15 @@ export async function getAllLeaves(): Promise<Leave[]> {
         name,
         email
       },
+      department->{
+        _id,
+        name
+      },
       type,
       status,
       startDate,
       endDate,
+      days,
       reason
     }`
   );
@@ -33,10 +38,15 @@ export async function getLeaveById(id: string): Promise<Leave | null> {
       name,
       email
     },
+    department->{
+      _id,
+      name
+    },
     type,
     status,
     startDate,
     endDate,
+    days,
     reason
   }`;
   const leave = await client.fetch(query, { id });
@@ -56,10 +66,15 @@ export async function getLeaveByEmployeeId(
         name,
         email
       },
+      department->{
+        _id,
+        name
+      },
       type,
       status,
       startDate,
       endDate,
+      days,
       reason
     }`,
     { employeeId }
@@ -70,10 +85,12 @@ export async function createLeave(leave: LeaveInput): Promise<Leave> {
   const newDoc = await client.create({
     _type: "leave",
     employee: { _type: "reference", _ref: leave.employeeId },
+    department: { _type: "reference", _ref: leave.departmentId }, 
     type: leave.type,
     status: leave.status,
     startDate: leave.startDate,
     endDate: leave.endDate,
+    days: leave.days,
     reason: leave.reason,
   });
   const createdLeave = await getLeaveById(newDoc._id);

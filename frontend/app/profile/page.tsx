@@ -4,7 +4,6 @@ import InformationCard from '../_component/InformationCard'
 import ProfileCard from '../_component/ProfileCard'
 import { auth } from '@/lib/auth'
 import { getEmployeesByUserId } from '@/lib/sanity/utils/employee'
-import { getUserById } from '@/lib/sanity/utils/user'
 
 const page = async() => {
   const session = await auth();
@@ -15,11 +14,10 @@ const page = async() => {
   }
 
   const employee = await getEmployeesByUserId(user.id);
-  const fetchedUser = await getUserById(user.id);
 
   return (
     <div>
-        <ProfileCard id={user.id} email={user.email} name={fetchedUser.name}/>
+        <ProfileCard id={user.id}/>
         <UserCard {...employee} />
         <InformationCard/>
     </div>

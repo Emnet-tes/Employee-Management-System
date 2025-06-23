@@ -1,23 +1,34 @@
 "use client";
 
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Attendance } from "@/types/attendance";
 import { calculateWorkHours } from "@/app/utils/utils";
+import { getEmployeesByUserId } from "@/lib/sanity/utils/employee";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
+import AttendanceTable from "./AttendanceTable";
+import Loading from "@/app/_component/Loading";
 
 interface Props {
-  employeeId: string;
+  userId: string;
 }
 
-export default function EmployeeAttendance({ employeeId }: Props) {
+export default function EmployeeAttendance({ userId }: Props) {
   const [attendances, setAttendances] = useState<Attendance[]>([]);
+  const [employeeId, setEmployeeId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
-        const result = await getAttendancesByEmployeeId(employeeId);
-        setAttendances(result || []);
+        const employee = await getEmployeesByUserId(userId);
+        const id = employee?._id;
+        setEmployeeId(id);
+        if (id) {
+          const result = await getAttendancesByEmployeeId(id);
+          setAttendances(result || []);
+        }
       } catch (err) {
         console.error("Failed to fetch attendance:", err);
       } finally {
@@ -26,10 +37,17 @@ export default function EmployeeAttendance({ employeeId }: Props) {
     }
 
     fetchData();
-  }, [employeeId]);
+  }, [userId]);
 
   const today = new Date().toISOString().split("T")[0];
   const todayAttendance = attendances.find((a) => a.date === today);
+
+  async function refreshAttendance() {
+    if (employeeId) {
+      const updated = await getAttendancesByEmployeeId(employeeId);
+      setAttendances(updated || []);
+    }
+  }
 
   async function handleCheckIn() {
     const now = new Date();
@@ -42,6 +60,7 @@ export default function EmployeeAttendance({ employeeId }: Props) {
       return;
     }
 
+    setSubmitting(true);
     try {
       const res = await fetch("/api/attendance", {
         method: "POST",
@@ -57,11 +76,12 @@ export default function EmployeeAttendance({ employeeId }: Props) {
 
       if (!res.ok) throw new Error(await res.text());
 
-      const newAttendance = await res.json();
-      setAttendances((prev) => [...prev, newAttendance]);
+      await refreshAttendance();
     } catch (err) {
       console.error("Check-in error:", err);
       alert("Failed to check in.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -80,6 +100,7 @@ export default function EmployeeAttendance({ employeeId }: Props) {
     const time = now.toTimeString().slice(0, 5);
     const checkOut = `${date} ${time}`;
 
+    setSubmitting(true);
     try {
       const res = await fetch(`/api/attendance/${todayAttendance._id}`, {
         method: "PATCH",
@@ -95,24 +116,24 @@ export default function EmployeeAttendance({ employeeId }: Props) {
 
       if (!res.ok) throw new Error(await res.text());
 
-      const updated = await res.json();
-      setAttendances((prev) =>
-        prev.map((a) => (a._id === updated._id ? updated : a))
-      );
+      await refreshAttendance();
     } catch (err) {
-      console.error("Check-out error:", err);`3`
+      console.error("Check-out error:", err);
       alert("Failed to check out.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
+  if (loading) return <Loading />;
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">My Attendance</h1>
+    <div className="text-black gap-6 flex flex-col">
       <div className="bg-white rounded shadow p-4 mb-4 flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex-1">
           <div className="text-lg font-semibold">Today: {today}</div>
           <div>
-            Status:{" "}
+            Status:
             <span
               className={
                 todayAttendance?.status === "Present"
@@ -124,7 +145,7 @@ export default function EmployeeAttendance({ employeeId }: Props) {
             </span>
           </div>
           <div>
-            Check-In:{" "}
+            Check-In:
             {todayAttendance?.checkIn || (
               <span className="text-gray-400">Not checked in</span>
             )}
@@ -145,50 +166,35 @@ export default function EmployeeAttendance({ employeeId }: Props) {
         </div>
         <div className="flex flex-col gap-2">
           <button
-            className={`px-4 py-2 rounded ${todayAttendance?.checkIn ? "bg-gray-300 text-gray-500" : "bg-green-600 text-white"}`}
+            className={`px-4 py-2 rounded not-disabled:cursor-pointer ${todayAttendance?.checkIn ? "bg-gray-300 text-gray-500" : "bg-green-600 text-white"}`}
             onClick={handleCheckIn}
-            disabled={!!todayAttendance?.checkIn}
+            disabled={!!todayAttendance?.checkIn || submitting}
           >
-            {todayAttendance?.checkIn ? "Checked In" : "Check In"}
+            {submitting && !todayAttendance?.checkIn
+              ? "Checking In..."
+              : todayAttendance?.checkIn
+                ? "Checked In"
+                : "Check In"}
           </button>
           <button
-            className={`px-4 py-2 rounded ${!todayAttendance?.checkIn || todayAttendance?.checkOut ? "bg-gray-300 text-gray-500" : "bg-blue-600 text-white"}`}
+            className={`px-4 py-2 rounded not-disabled:cursor-pointer ${!todayAttendance?.checkIn || todayAttendance?.checkOut ? "bg-gray-300 text-gray-500" : "bg-blue-600 text-white"}`}
             onClick={handleCheckOut}
-            disabled={!todayAttendance?.checkIn || !!todayAttendance?.checkOut}
+            disabled={
+              !todayAttendance?.checkIn ||
+              !!todayAttendance?.checkOut ||
+              submitting
+            }
           >
-            {todayAttendance?.checkOut ? "Checked Out" : "Check Out"}
+            {submitting && !todayAttendance?.checkOut
+              ? "Checking Out..."
+              : todayAttendance?.checkOut
+                ? "Checked Out"
+                : "Check Out"}
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-2 py-1">Date</th>
-              <th className="border px-2 py-1">Check-In</th>
-              <th className="border px-2 py-1">Check-Out</th>
-              <th className="border px-2 py-1">Work Hours</th>
-              <th className="border px-2 py-1">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attendances.map((a) => (
-              <tr key={a._id} className="text-center">
-                <td className="border px-2 py-1">{a.date}</td>
-                <td className="border px-2 py-1">{a.checkIn || "-"}</td>
-                <td className="border px-2 py-1">{a.checkOut || "-"}</td>
-                <td className="border px-2 py-1">
-                  {calculateWorkHours(
-                    a.checkIn ?? undefined,
-                    a.checkOut ?? undefined
-                  )}
-                </td>
-                <td className="border px-2 py-1">{a.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <h1 className="text-2xl font-bold ">My Attendance</h1>
+      <AttendanceTable attendances={attendances} />
     </div>
   );
 }
