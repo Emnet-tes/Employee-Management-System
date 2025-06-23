@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getEmployees } from "@/lib/sanity/utils/employee";
+import Loading from "../_component/Loading";
 
 interface AdminDashboardProps {
   session: any;
@@ -29,6 +30,7 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
     Off: number;
   };
   const [attendanceData, setAttendanceData] = useState<Attendance[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStatsAndAttendance = async () => {
@@ -86,10 +88,14 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
         setAttendanceData(data);
       } catch (err) {
         setAttendanceData([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchStatsAndAttendance();
   }, []);
+
+  if (loading) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">

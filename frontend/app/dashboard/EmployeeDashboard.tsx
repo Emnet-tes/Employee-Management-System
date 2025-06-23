@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/component/card";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
 import { getLeaveById } from "@/lib/sanity/utils/leaves";
 import { getPerformanceById } from "@/lib/sanity/utils/performance";
+import Loading from "../_component/Loading";
 
 interface EmployeeDashboardProps {
   session: any;
@@ -62,6 +63,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
     };
     fetchEmployeeReviews();
   }, [session]);
+
+  if (loading) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 text-black">

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/component/card";
 import { Performance } from "@/types/performance";
+import Loading from "../_component/Loading";
 
 const EmployeePerformancePage = ({ session }: { session: any }) => {
   const [reviews, setReviews] = useState<Performance[]>([]) || [];
@@ -34,7 +35,7 @@ const EmployeePerformancePage = ({ session }: { session: any }) => {
   }, [session]);
 
   if (loading) {
-    return <p className="p-4">Loading your performance reviews...</p>;
+    return <Loading/>;
   }
 
   return (

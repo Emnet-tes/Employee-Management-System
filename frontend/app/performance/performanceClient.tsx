@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Performance } from "@/types/performance";
+import Loading from "../_component/Loading";
 
 const AdminPerformancePage = () => {
   const [reviews, setReviews] = useState<Performance[]>([]);
@@ -24,7 +25,7 @@ const AdminPerformancePage = () => {
     fetchData();
   }, []);
 
-  if (loading) return <p className="p-4">Loading performance data...</p>;
+  if (loading) return <Loading />;
 
   return (
     <div className="p-4">

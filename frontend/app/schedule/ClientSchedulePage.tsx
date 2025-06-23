@@ -10,6 +10,7 @@ import AssignScheduleModal from "@/component/AssignScheduleModal";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import Loading from "../_component/Loading";
 
 export default function ClientSchedulePage({ session }: { session: any }) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -26,6 +27,7 @@ export default function ClientSchedulePage({ session }: { session: any }) {
     endTime: "",
     notes: "",
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadSchedules() {
@@ -46,8 +48,9 @@ export default function ClientSchedulePage({ session }: { session: any }) {
         setDepartmentEmployees(deptEmps);
       }
     }
-    loadSchedules();
-    loadEmployees();
+    Promise.all([loadSchedules(), loadEmployees()]).finally(() =>
+      setLoading(false)
+    );
   }, [session]);
 
   const handleSubmit = async (e: any) => {
@@ -74,6 +77,8 @@ export default function ClientSchedulePage({ session }: { session: any }) {
     title: `${sched.employee?.name || "N/A"} - ${sched.shift}`,
     date: sched.date,
   }));
+
+  if (loading) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 gap-4 p-4 text-black">

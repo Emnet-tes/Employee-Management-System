@@ -5,6 +5,7 @@ import { Performance } from "@/types/performance";
 import AddReviewModal from "@/component/AddReviewModal";
 import { getEmployees } from "@/lib/sanity/utils/employee";
 import { Employee } from "@/types/employee";
+import Loading from "../_component/Loading";
 
 const ManagerPerformancePage = ({ session }: { session: any }) => {
   const [reviews, setReviews] = useState<Performance[]>([]);
@@ -56,7 +57,7 @@ const ManagerPerformancePage = ({ session }: { session: any }) => {
   if (loading) return <p className="p-4">Loading performance data...</p>;
 
   if (reviews.length === 0) {
-    return <p className="p-4">No reviews created by you yet.</p>;
+    return <Loading />;
   }
 
   return (
