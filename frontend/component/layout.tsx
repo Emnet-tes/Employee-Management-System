@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   Home,
@@ -13,8 +13,13 @@ import {
 } from "lucide-react";
 
 import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { data: session } = useSession();
+  console.log("Session in Layout:", session);
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -29,11 +34,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             label="Dashboard"
             href="/dashboard"
           />
-          <NavItem
-            icon={<BarChart size={20} />}
-            label="Employee"
-            href="/employees"
-          />
+          {session?.user?.role !== "employee" && (
+            <NavItem
+              icon={<BarChart size={20} />}
+              label="Employee"
+              href="/employees"
+            />
+          )}
           <NavItem
             icon={<Calendar size={20} />}
             label="Attendance"
@@ -59,10 +66,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         <div className="pt-10 border-t">
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition"
+            onClick={async () => {
+              setIsLoggingOut(true);
+              await signOut({ callbackUrl: "/login" });
+              setIsLoggingOut(false);
+            }}
+            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isLoggingOut}
           >
-            <LogOut size={20} /> Logout
+            <LogOut size={20} /> {isLoggingOut ? "Logging out..." : "Logout"}
           </button>
         </div>
       </aside>
@@ -71,7 +83,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-1 p-8 overflow-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-semibold text-gray-800">
-            {getGreeting()}, Krishna
+            {getGreeting()}, {session?.user?.name || "User"}
           </h1>
 
           <div className="flex items-center gap-6">
@@ -83,7 +95,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 year: "numeric",
               })}
             </div>
-            <button className="relative p-2 rounded-full hover:bg-gray-200 transition">
+            <button className="relative p-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 text-gray-600"
@@ -100,7 +112,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </svg>
               <span className="absolute top-1 right-1 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <button className="p-1 rounded-full hover:bg-gray-200 transition">
+            <button className="p-1 rounded-full hover:bg-gray-200 transition cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 text-gray-600"

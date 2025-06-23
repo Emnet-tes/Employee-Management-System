@@ -143,13 +143,13 @@ export default function AssignScheduleModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-black"
+            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-black cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
           >
             Assign Schedule
           </button>
