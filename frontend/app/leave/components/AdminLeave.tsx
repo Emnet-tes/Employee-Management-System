@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { getLeaveColumns } from "./LeaveColumns";
 import Table from "@/app/_component/Table";
+import Loading from "@/app/_component/Loading";
 
 
 
@@ -24,6 +25,7 @@ const COLORS = ["#8884d8", "#82ca9d"];
 const AdminLeave = () => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [usedDays, setUsedDays] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const colums = useMemo(
     () => getLeaveColumns({
@@ -35,6 +37,8 @@ const AdminLeave = () => {
   );
 
   async function fetchLeaves() {
+    setLoading(true);
+    try {
     const response = await getAllLeaves();
     setLeaves(response);
 
@@ -47,10 +51,14 @@ const AdminLeave = () => {
     );
     setUsedDays(totalUsed);
   }
+  finally {
+    setLoading(false);
+  }
+  }
 
   useEffect(() => {
     fetchLeaves();
-  });
+  },[]);
 
   const handleStatusChange = async (
     leaveId: string,
@@ -67,6 +75,20 @@ const AdminLeave = () => {
 
       alert(`Leave ${status} successfully!`);
       await fetchLeaves();
+      if (status === "approved") {
+        //  update employee Employement status to "on leave"
+        const data = await response.json();
+        // get employee id from response
+        const employeeId = data.employee._id;
+        const updateResponse = await fetch(`/api/employee/${employeeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ employmentStatus: "on_leave" }),
+        });
+        if (!updateResponse.ok) {
+          throw new Error("Failed to update employee status");
+        }
+      }
     } catch (error) {
       console.error("Error updating leave status:", error);
       alert("Failed to update leave status.");
@@ -80,7 +102,14 @@ const AdminLeave = () => {
       value: Math.max(TOTAL_LEAVE_DAYS - usedDays, 0),
     },
   ];
-
+  if (loading) {
+    return <Loading/>
+  }
+  if( leaves.length === 0) {
+    return <div className="text-center text-gray-500 py-4">
+          No leave records found.
+        </div>
+  }
   return (
     <div className="text-black space-y-16 min-h-screen p-4 flex flex-col">
       <div>
@@ -98,7 +127,7 @@ const AdminLeave = () => {
       {/* Pie Chart */}
       <div className="w-2/5 h-72">
         <h1 className=" text-lg font-semibold mb-4">
-          Employee Leaves Requests
+          Employee Leave Balance
         </h1>
         <ResponsiveContainer className="bg-white rounded-md shadow-md p-4">
           <PieChart>

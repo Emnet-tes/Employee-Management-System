@@ -42,16 +42,21 @@ const ManagerLeave = ({ managerId, departmentId }: Props) => {
     []
   );
   async function fetchLeaves() {
-    const response = await getAllLeaves();
-    const mangerleaves = await getLeaveByEmployeeId(managerId);
-    const filterByDepartment = response.filter(
-      (leave) =>
-        leave.department._id === departmentId &&
-        leave.employee._id !== managerId
-    );
-    setManagerLeave(mangerleaves);
-    setLeaves(filterByDepartment);
-    return response;
+    setLoading(true);
+    try {
+      const response = await getAllLeaves();
+      const mangerleaves = await getLeaveByEmployeeId(managerId);
+      const filterByDepartment = response.filter(
+        (leave) =>
+          leave.department._id === departmentId &&
+          leave.employee._id !== managerId
+      );
+      setManagerLeave(mangerleaves);
+      setLeaves(filterByDepartment);
+      return response;
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleStatusChange = async (
@@ -72,6 +77,20 @@ const ManagerLeave = ({ managerId, departmentId }: Props) => {
       alert(`Leave ${status} successfully!`);
       // Re-fetch leaves after updating
       await fetchLeaves();
+      if (status === "approved") {
+        //  update employee Employement status to "on leave"
+        const data = await response.json();
+        // get employee id from response
+        const employeeId = data.employee._id;
+        const updateResponse = await fetch(`/api/employee/${employeeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ employmentStatus: "on leave" }),
+        });
+        if (!updateResponse.ok) {
+          throw new Error("Failed to update employee status");
+        }
+      }
     } catch (error) {
       console.error("Error updating leave status:", error);
       alert("Failed to update leave status.");
@@ -115,17 +134,13 @@ const ManagerLeave = ({ managerId, departmentId }: Props) => {
   }
 
   useEffect(() => {
-    setLoading(true);
-    try {
-      fetchLeaves();
-    } finally {
-      setLoading(false);
-    }
-  });
+    fetchLeaves();
+  }, []);
 
   if (loading) {
     return <Loading />;
   }
+
   return (
     <div className="text-black p-4 gap-4 flex flex-col">
       <div className="flex mb-6 border-b w-fit border-gray-400">
@@ -151,14 +166,26 @@ const ManagerLeave = ({ managerId, departmentId }: Props) => {
           <h1 className=" text-lg font-semibold mb-4">
             Employee Leaves Requests
           </h1>
-          <Table data={leaves} columns={columnsForEmployees} />
+          {leaves.length === 0 && !loading ? (
+            <div className="text-center text-gray-500 py-4">
+              No leave records found.
+            </div>
+          ) : (
+            <Table data={leaves} columns={columnsForEmployees} />
+          )}
         </div>
       )}
       {activeTab === "manager" && (
         <div>
           <h1 className="text-lg font-semibold mb-4">My Leave Requests</h1>
+          {managerLeave.length === 0 && !loading ? (
+            <div className="text-center text-gray-500 py-4">
+              No leave records found.
+            </div>
+          ) : (
+            <Table data={managerLeave} columns={columnsForManager} />
+          )}
 
-          <Table data={managerLeave} columns={columnsForManager} />
           <button
             onClick={() => setShowModal(true)}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded w-fit cursor-pointer"

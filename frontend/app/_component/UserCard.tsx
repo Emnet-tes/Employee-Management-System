@@ -12,9 +12,9 @@ const UserCard = (employee:Employee) => {
         </div>
         <div className="flex flex-col justify-center px-2 overflow-hidden whitespace-nowrap">
           <span className="text-gray-800 font-semibold text-base truncate">
-            {employee._id}
+            {employee.employmentStatus}
           </span>
-          <span className="text-gray-500 text-sm truncate">Employee No</span>
+          <span className="text-gray-500 text-sm truncate">Employement Status</span>
         </div>
       </div>
 

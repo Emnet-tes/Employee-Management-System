@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Attendance } from "@/types/attendance";
 import { calculateWorkHours } from "@/app/utils/utils";
 import { getEmployeesByUserId } from "@/lib/sanity/utils/employee";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
-import AttendanceTable from "./AttendanceTable";
 import Loading from "@/app/_component/Loading";
+import { getAttendanceColumns } from "./AttendanceColums";
+import Table from "@/app/_component/Table";
 
 interface Props {
   userId: string;
@@ -38,6 +39,8 @@ export default function EmployeeAttendance({ userId }: Props) {
 
     fetchData();
   }, [userId]);
+
+  const colums = useMemo(() => getAttendanceColumns(), []);
 
   const today = new Date().toISOString().split("T")[0];
   const todayAttendance = attendances.find((a) => a.date === today);
@@ -194,7 +197,10 @@ export default function EmployeeAttendance({ userId }: Props) {
         </div>
       </div>
       <h1 className="text-2xl font-bold ">My Attendance</h1>
-      <AttendanceTable attendances={attendances} />
+      {attendances.length === 0 ? ( <div className="text-center text-gray-500 py-4">
+        No Attendace records found.
+      </div>):<Table data={attendances} columns={colums}  />}
+      
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { createPortal } from "react-dom";
-import Loading from "../_component/Loading";
+import Loading from "../../_component/Loading";
 
 interface Department {
   _id: string;
