@@ -54,7 +54,7 @@ const ManagerPerformancePage = ({ session }: { session: any }) => {
     fetchData();
   }, [session]);
 
-  if (loading) return <p className="p-4">Loading performance data...</p>;
+  if (loading) return <Loading />;
 
   if (reviews.length === 0) {
     return <Loading />;
