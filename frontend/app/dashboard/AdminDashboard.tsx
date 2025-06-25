@@ -27,7 +27,7 @@ const AdminDashboard = () => {
   const [attendanceData, setAttendanceData] = useState<
     { name: string; Present: number; Absent: number; "on leave": number }[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [leaveData, setLeaveData] = useState<Leave[]>([]);
   const [pieMode, setPieMode] = useState<"type" | "status">("type");
   const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
@@ -40,6 +40,9 @@ const AdminDashboard = () => {
     totalDepartments: 0,
     totalManagers: 0,
   });
+  const [attendanceLoaded, setAttendanceLoaded] = useState(false);
+  const [leavesLoaded, setLeavesLoaded] = useState(false);
+  const [performanceLoaded, setPerformanceLoaded] = useState(false);
   const pieColors = [
     "#60a5fa",
     "#34d399",
@@ -107,7 +110,7 @@ const AdminDashboard = () => {
       } catch {
         setAttendanceData([]);
       } finally {
-        setLoading(false);
+        setAttendanceLoaded(true);
       }
     }
     fetchAttendance();
@@ -118,6 +121,7 @@ const AdminDashboard = () => {
       const res = await fetch("/api/leaves");
       const data: Leave[] = await res.json();
       setLeaveData(data);
+      setLeavesLoaded(true);
     }
     fetchLeaves();
   }, []);
@@ -156,6 +160,8 @@ const AdminDashboard = () => {
         setPerformanceStats({ total, avgRating });
       } catch {
         setPerformanceStats({ total: 0, avgRating: 0 });
+      } finally {
+        setPerformanceLoaded(true);
       }
     }
     fetchPerformance();
@@ -173,7 +179,8 @@ const AdminDashboard = () => {
     setLeaveStats({ total, pending });
   }, [leaveData]);
 
-  if (loading) return <Loading />;
+  const allLoaded = attendanceLoaded && leavesLoaded && performanceLoaded;
+  if (!allLoaded) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ">

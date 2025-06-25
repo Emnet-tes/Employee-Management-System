@@ -83,13 +83,13 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         const dbUser = await client.fetch(
           `*[_type == "user" && _id == $id][0]{
-    _id,
-    employee->{_id},
-    role->{name}
-  }`,
+            _id,
+            "employeeId": *[_type == "employee" && user._ref == ^._id][0]._id,
+            role->{name}
+          }`,
           { id: user.id }
         );
-        token.employeeId = dbUser?.employee?._id || null;
+        token.employeeId = dbUser?.employeeId || null;
         token.id = user.id;
         token.role = user.role;
       }

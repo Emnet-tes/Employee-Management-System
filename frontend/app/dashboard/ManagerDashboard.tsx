@@ -47,6 +47,9 @@ const ManagerDashboard: React.FC<Props> = ({ session }) => {
   );
   const [leaveData, setLeaveData] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
+  const [attendanceLoaded, setAttendanceLoaded] = useState(false);
+  const [leavesLoaded, setLeavesLoaded] = useState(false);
+  const [performanceLoaded, setPerformanceLoaded] = useState(false);
   const [pieMode, setPieMode] = useState<"reason" | "status">("reason");
   const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
   const pieColors = [
@@ -110,6 +113,7 @@ const ManagerDashboard: React.FC<Props> = ({ session }) => {
           Off: grouped[day]?.Off || 0,
         }));
         setAttendanceData(data);
+        setAttendanceLoaded(true);
 
         const leaveData = await getAllLeaves();
         // Filter leaveData to only those in the manager's department
@@ -117,6 +121,7 @@ const ManagerDashboard: React.FC<Props> = ({ session }) => {
           teamIds.includes(l.employee?._id)
         );
         setLeaveData(teamLeaves);
+        setLeavesLoaded(true);
         const pending = teamLeaves.filter(
           (l: Leave) => l.status === "pending"
         ).length;
@@ -130,10 +135,12 @@ const ManagerDashboard: React.FC<Props> = ({ session }) => {
           teamPerformance.reduce((sum: number, p) => sum + (p.rating || 0), 0) /
           (teamPerformance.length || 1);
         setPerformanceStats({ total: teamPerformance.length, avgRating });
+        setPerformanceLoaded(true);
       } catch {
         setAttendanceData([]);
-      } finally {
-        setLoading(false);
+        setAttendanceLoaded(true);
+        setLeavesLoaded(true);
+        setPerformanceLoaded(true);
       }
     };
     fetchStatsAndAttendance();
@@ -164,7 +171,8 @@ const ManagerDashboard: React.FC<Props> = ({ session }) => {
     }
   }, [leaveStats, pieMode, leaveData]);
 
-  if (loading) return <Loading />;
+  const allLoaded = attendanceLoaded && leavesLoaded && performanceLoaded;
+  if (!allLoaded) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ">
