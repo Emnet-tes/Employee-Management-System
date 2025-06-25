@@ -21,7 +21,10 @@ export async function getEmployees(): Promise<Employee[]> {
         name,
         email
       },
-      "documents": documents[]
+      "documents": documents[]{
+      _key,
+      asset->{ _id, url ,_ref},
+      }
     }`
   );
 }
@@ -43,7 +46,9 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
       name,
       email
     },
-    "documents": documents[]
+    "documents": documents[]{
+      asset->{ _id, url },
+      }
   }`;
 
   const employee = await client.fetch(query, { id });
@@ -61,12 +66,14 @@ export async function getEmployeesByUserId(id: string): Promise<Employee> {
     role->{ title },
     position,
     startDate,
-    documents,
+    "documents": documents[]{
+      asset->{ _id, url },
+      },
     department->{ _id,name, description },
     _id,
     _createdAt,
     _updatedAt
-    }`
+    }`;
   const employees = await client.fetch(query, { id });
   return employees as Employee;
 }

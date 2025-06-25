@@ -13,22 +13,29 @@ import { Employee } from "@/types/employee";
 import { Role } from "@/types/role";
 import { Department } from "@/types/department";
 
+interface EmployeeFormState {
+  name?: string;
+  email?: string;
+  phone?: string;
+  position?: string;
+  departmentId?: string;
+  roleId?: string;
+  startDate?: string;
+  employmentStatus?: string;
+  documents?: File[];
+}
+
 const EmployeeTab = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showModal, setShowModal] = useState(false);
-  interface EmployeeFormState {
-    name?: string;
-    email?: string;
-    phone?: string;
-    position?: string;
-    departmentId?: string;
-    roleId?: string;
-    startDate?: string;
-    employmentStatus?: string;
-  }
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDocuments, setSelectedDocuments] = useState<
+    { asset: { url: string } }[]
+  >([]);
+
   const [formState, setFormState] = useState<EmployeeFormState>({});
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -39,6 +46,8 @@ const EmployeeTab = () => {
         showActions: true,
         onEdit: openModal,
         onDelete: handleDelete,
+        showDocuments: true,
+        onShowDocuments: handleShowDocuments,
       }),
     []
   );
@@ -52,12 +61,24 @@ const EmployeeTab = () => {
         getAllDepartments(),
       ]);
       setEmployees(emp || []);
+      console.log("employees", emp);
       setRoles(roleList || []);
       setDepartments(deptList || []);
       setLoading(false);
     }
     fetchData();
   }, []);
+
+  function handleShowDocuments(employee: Employee){
+    setSelectedDocuments(employee?.documents ?? []);
+    setIsModalOpen(true);
+  };
+  
+
+  const closeDocumentModal = () => {
+    setIsModalOpen(false);
+    setSelectedDocuments([]);
+  };
 
   async function uploadToServer(file: File, type: "image" | "file") {
     const formData = new FormData();
@@ -325,6 +346,39 @@ const EmployeeTab = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 h-full flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Employee Documents</h2>
+            {selectedDocuments.length ? (
+              <ul className="space-y-2">
+                {selectedDocuments.map((doc, index) => (
+                  <li key={index}>
+                    <a
+                      href={doc.asset?.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
+                      View Document {index + 1}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No documents found.</p>
+            )}
+            <button
+              onClick={closeDocumentModal}
+              className="mt-6 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

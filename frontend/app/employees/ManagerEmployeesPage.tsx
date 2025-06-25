@@ -20,7 +20,8 @@ export default function ManagerEmployeesPage({ id }: { id: string }) {
     const columns = useMemo(
       () =>
         getEmployeeColumns(
-          {showActions: false 
+          {showActions: false ,
+            showDocuments: false,
 
           }),
       []

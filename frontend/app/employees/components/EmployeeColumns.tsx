@@ -9,12 +9,16 @@ interface ColumnOptions {
   showActions: boolean;
   onEdit?: (employee: Employee) => void;
   onDelete?: (employeeId: string, userId: string) => void;
+  showDocuments: boolean 
+  onShowDocuments?: (employee: Employee) => void;
 }
 
 export function getEmployeeColumns({
   showActions,
   onEdit,
   onDelete,
+  onShowDocuments,
+  showDocuments ,
 }: ColumnOptions): ColumnDef<Employee>[] {
   return [
     {
@@ -92,12 +96,43 @@ export function getEmployeeColumns({
         );
       },
     },
+    ...(showDocuments ? [{
+      header: "Documents",
+      id: "documents",
+      cell: ({
+        row,
+      }: {
+        row: import("@tanstack/react-table").Row<Employee>;
+      }) => {
+        const employee = row.original;
+        const hasDocuments =
+          employee.documents && employee.documents.length > 0;
+
+        return (
+          <button
+            onClick={() => hasDocuments && onShowDocuments?.(employee)}
+            disabled={!hasDocuments}
+            className={`px-3 py-1 rounded text-sm transition ${
+              hasDocuments
+                ? "bg-green-500 text-white hover:bg-green-600 cursor-pointer"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            Show Documents
+          </button>
+        );
+      },
+    }]: []),
     ...(showActions
       ? [
           {
             header: "Actions",
             id: "actions",
-            cell: ({ row }: { row: import("@tanstack/react-table").Row<Employee> }) => {
+            cell: ({
+              row,
+            }: {
+              row: import("@tanstack/react-table").Row<Employee>;
+            }) => {
               const emp = row.original;
               return (
                 <div className="flex justify-center gap-2">

@@ -24,7 +24,14 @@ export type Employee = {
     name: string;
     email: string;
   };
-  documents?: File[];
+  documents?: {
+    _key: string;
+    asset: {
+      _id: string;
+      url: string;
+      _ref: string;
+    };
+  }[];
 };
 
 export type EmployeeInput = {
