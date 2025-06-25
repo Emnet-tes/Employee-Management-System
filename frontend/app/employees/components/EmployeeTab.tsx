@@ -5,11 +5,10 @@ import { getEmployees } from "@/lib/sanity/utils/employee";
 import { getAllRoles } from "@/lib/sanity/utils/role";
 import { X } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
-import Loading from "../_component/Loading";
-
+import Loading from "../../_component/Loading";
 
 import { getEmployeeColumns } from "./EmployeeColumns";
-import Table from "../_component/Table";
+import Table from "../../_component/Table";
 import { Employee } from "@/types/employee";
 import { Role } from "@/types/role";
 import { Department } from "@/types/department";
@@ -37,7 +36,7 @@ const EmployeeTab = () => {
   const columns = useMemo(
     () =>
       getEmployeeColumns({
-        showActions: true, 
+        showActions: true,
         onEdit: openModal,
         onDelete: handleDelete,
       }),
@@ -295,9 +294,9 @@ const EmployeeTab = () => {
               </select>
               {!isEditMode && (
                 <>
-                <label className="block text-sm font-medium text-gray-700">
-                  Photo
-                </label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Photo
+                  </label>
                   <input
                     name="photo"
                     type="file"
@@ -339,7 +338,13 @@ const EmployeeTab = () => {
           Add Employee
         </button>
       </div>
-      <Table data={employees} columns={columns} />
+      {employees.length === 0 && !loading ? (
+        <div className="text-center text-gray-500">
+          No employees found. Please add an employee.
+        </div>
+      ) : (
+        <Table data={employees} columns={columns} />
+      )}
     </div>
   );
 };

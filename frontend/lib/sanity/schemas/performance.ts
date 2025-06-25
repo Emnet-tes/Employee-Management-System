@@ -1,4 +1,4 @@
-export default {
+const performance = {
   name: "performance",
   type: "document",
   title: "Performance Review",
@@ -25,3 +25,5 @@ export default {
     { name: "rating", type: "number" },
   ],
 };
+
+export default performance;

@@ -1,8 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { buildImageUrl } from "../utils/utils";
+
 import { Employee } from "@/types/employee";
+import { buildImageUrl } from "@/app/utils/utils";
 
 interface ColumnOptions {
   showActions: boolean;

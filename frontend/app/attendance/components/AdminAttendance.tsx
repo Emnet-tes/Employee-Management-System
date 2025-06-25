@@ -1,12 +1,13 @@
 "use client";
 
 import { Attendance } from "@/types/attendance";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getAttendances } from "@/lib/sanity/utils/attendance";
 
 import Loading from "@/app/_component/Loading";
-import AttendanceTable from "./AttendanceTable";
+import { getAttendanceColumns } from "./AttendanceColums";
+import Table from "@/app/_component/Table";
 
 export default function AdminAttendance() {
   const [attendances, setAttendances] = useState<Attendance[]>([]);
@@ -54,6 +55,7 @@ export default function AdminAttendance() {
       : "N/A";
 
 
+  const colums = useMemo(()=> getAttendanceColumns(), []);
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -77,12 +79,16 @@ export default function AdminAttendance() {
       <Loading/>
     );
   }
+  if(attendances.length === 0) {
+    return <div className="text-center text-gray-500 py-4">
+          No Attendace records found.
+        </div>
+  }
 
   return (
     <div className="p-4 text-black">
       <h1 className="text-2xl font-bold mb-4">Attendance Overview (Admin)</h1>
-      <AttendanceTable attendances={attendances} enableFilters={true} />
-
+      <Table data={attendances} columns={colums} enableFilters={true} />
       <div className="mt-6">
         <h2 className="font-semibold mb-2">Trends</h2>
         <ul className="list-disc ml-6 text-gray-700 text-sm">

@@ -11,9 +11,10 @@ import {
 interface TableProps<TData> {
   data: TData[];
   columns: ColumnDef<TData>[];
+  enableFilters?: boolean;
 }
 
-export default function EmployeeTable<TData>({ data, columns }: TableProps<TData>) {
+export default function Table<TData>({ data, columns ,enableFilters}: TableProps<TData>) {
   const table = useReactTable({
     data,
     columns,
@@ -27,8 +28,29 @@ export default function EmployeeTable<TData>({ data, columns }: TableProps<TData
     },
   });
 
+
   return (
-    <div className="overflow-x-auto p-4 bg-white rounded-lg shadow">
+    <div className="overflow-x-auto p-4 bg-white rounded-lg shadow space-y-4">
+      {enableFilters && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {table.getAllColumns().map((column) =>
+            column.getCanFilter() ? (
+              <div key={column.id}>
+                <label className="text-xs text-gray-500">
+                  {column.columnDef.header as string}
+                </label>
+                <input
+                  type="text"
+                  placeholder={`Filter ${column.id}`}
+                  value={(column.getFilterValue() ?? "") as string}
+                  onChange={(e) => column.setFilterValue(e.target.value)}
+                  className="w-full border px-2 py-1 rounded text-sm"
+                />
+              </div>
+            ) : null
+          )}
+        </div>
+      )}
       <table className="min-w-full text-sm text-gray-800">
         <thead className="bg-gray-100">
           {table.getHeaderGroups().map((headerGroup) => (

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import DepartmentTab from "./DepartmentTab";
-import EmployeeTab from "./EmployeeTab";
+import DepartmentTab from "./components/DepartmentTab";
+import EmployeeTab from "./components/EmployeeTab";
 
 export default function AdminEmployeesPage() {
   const [activeTab, setActiveTab] = useState<"employees" | "departments">(

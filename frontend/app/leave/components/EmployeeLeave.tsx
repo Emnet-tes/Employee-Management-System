@@ -23,6 +23,8 @@ interface Props {
 const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+
 
   const form = useForm<LeaveFormValues>();
   const { register, handleSubmit, reset, formState } = form;
@@ -60,9 +62,19 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
   }
 
   async function fetchLeaves() {
-    const data = await getLeaveByEmployeeId(employeeId);
-    setLeaves(data);
+    setLoading(true);
+    try {
+      const data = await getLeaveByEmployeeId(employeeId);
+      setLeaves(data);
+    } catch (err) {
+      console.error("Failed to fetch leaves", err);
+      setLeaves([]);
+    } finally {
+      setLoading(false); 
+      console.log("Leaves fetched:", loading);
+    }
   }
+  
 
     const columns = useMemo(
       () =>
@@ -75,7 +87,7 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
   // Fetch leaves on mount
   useEffect(() => {
     fetchLeaves();
-  });
+  },[]);
 
   // Delete a leave
   // async function handleDelete(id: string) {
@@ -84,7 +96,20 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
   // }
   return (
     <div className="text-black p-4 gap-4 flex flex-col">
-      {leaves.length === 0 ? <Loading /> : <Table data={leaves} columns={columns} />}
+      {loading ? (
+        <Loading />
+      ) : leaves.length === 0 ? (
+        <div className="text-center text-gray-500 py-4">
+          No leave records found.
+        </div>
+      ) : (
+        <div className="">
+        <h1 className=" text-lg font-semibold mb-4">
+          Employee Leaves Requests
+        </h1>
+        <Table data={leaves} columns={columns} />
+      </div>
+      )}
 
       <button
         onClick={() => setShowModal(true)}
