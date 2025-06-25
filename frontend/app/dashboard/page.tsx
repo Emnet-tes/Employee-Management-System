@@ -12,7 +12,7 @@ const DashboardPage = async () => {
 
   return (
     <div className="p-4">
-      {role === "admin" && <AdminDashboard session={session} />}
+      {role === "admin" && <AdminDashboard  />}
       {role === "manager" && <ManagerDashboard session={session} />}
       {role === "employee" && <EmployeeDashboard session={session} />}
     </div>
