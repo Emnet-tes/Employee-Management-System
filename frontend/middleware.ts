@@ -11,21 +11,21 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const publicPaths = ["/", "/login"];
-//   if (pathname.startsWith("/api")) {
-//     const userAgent = request.headers.get("user-agent");
-
-//     // Block if user is accessing directly from browser
-//     if (userAgent?.includes("Mozilla")) {
-//       return new NextResponse("Browser access denied", { status: 403 });
-//     }
-//   }
+ 
   if (pathname === "/api/login") {
     return NextResponse.next();
   }
   if (pathname.startsWith("/api/auth")) {
     return NextResponse.next();
   }
+ if (pathname.startsWith("/api")) {
+    const userAgent = request.headers.get("user-agent");
 
+    // Block if user is accessing directly from browser
+    if (userAgent?.includes("Mozilla")) {
+      return new NextResponse("Browser access denied", { status: 403 });
+    }
+  }
   if (publicPaths.includes(pathname)) {
     return NextResponse.next(); 
   }
