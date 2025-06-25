@@ -1,4 +1,4 @@
-export default {
+const leave = {
   name: "leave",
   type: "document",
   title: "Leave Request",
@@ -21,3 +21,5 @@ export default {
     { name: "reason", type: "text" },
   ],
 };
+
+export default leave;

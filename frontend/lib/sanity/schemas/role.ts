@@ -1,5 +1,5 @@
 
-export default {
+const role = {
   name: "role",
   type: "document",
   title: "Role",
@@ -9,3 +9,5 @@ export default {
     { name: "permissions", type: "array", of: [{ type: "string" }] }, 
   ],
 };
+
+export default role;

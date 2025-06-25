@@ -1,4 +1,4 @@
-export default {
+const schedule = {
   name: "schedule",
   type: "document",
   title: "Work Schedule",
@@ -25,3 +25,5 @@ export default {
     { name: "notes", type: "text" },
   ],
 };
+
+export default schedule;

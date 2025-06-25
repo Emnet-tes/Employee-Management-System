@@ -1,5 +1,4 @@
-
-export default {
+const department = {
   name: "department",
   type: "document",
   title: "Department",
@@ -8,3 +7,5 @@ export default {
     { name: "description", type: "text" },
   ],
 };
+
+export default department;

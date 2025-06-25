@@ -1,6 +1,6 @@
 import { Rule } from "@sanity/types";
 
-export default {
+const employee ={
   name: "employee",
   type: "document",
   title: "Employee",
@@ -50,3 +50,5 @@ export default {
     },
   ],
 };
+
+export default employee;
