@@ -51,12 +51,12 @@ export default function LoginPage() {
         <div className="w-1/2 p-10 flex flex-col justify-center">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-black">Welcome Back</h2>
-            <span className="text-sm text-black">
+            {/* <span className="text-sm text-black">
               New User?{" "}
               <a href="/signup" className="text-blue-500 hover:underline">
                 Sign Up
               </a>
-            </span>
+            </span> */}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">

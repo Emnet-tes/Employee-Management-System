@@ -35,7 +35,7 @@ export default function AddReviewModal({
   console.log("Employees:", employees);
   const options = employees.map((emp) => ({
     value: emp._id,
-    label: emp.name ,
+    label: emp.name,
   }));
 
   const selectedOption = options.find((opt) => opt.value === employeeId);
@@ -148,30 +148,36 @@ export default function AddReviewModal({
                 className="border px-2 py-1 rounded"
                 required
               />
-              <input
-                placeholder="Target"
-                type="number"
-                value={kpi.target}
-                onChange={(e) => {
-                  const newKpis = [...kpis];
-                  newKpis[idx].target = Number(e.target.value);
-                  setKpis(newKpis);
-                }}
-                className="border px-2 py-1 rounded"
-                required
-              />
-              <input
-                placeholder="Achieved"
-                type="number"
-                value={kpi.achieved}
-                onChange={(e) => {
-                  const newKpis = [...kpis];
-                  newKpis[idx].achieved = Number(e.target.value);
-                  setKpis(newKpis);
-                }}
-                className="border px-2 py-1 rounded"
-                required
-              />
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-600 mb-1">Target</label>
+                <input
+                  placeholder="Target"
+                  type="number"
+                  value={kpi.target}
+                  onChange={(e) => {
+                    const newKpis = [...kpis];
+                    newKpis[idx].target = Number(e.target.value);
+                    setKpis(newKpis);
+                  }}
+                  className="border px-2 py-1 rounded"
+                  required
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-600 mb-1">Achieved</label>
+                <input
+                  placeholder="Achieved"
+                  type="number"
+                  value={kpi.achieved}
+                  onChange={(e) => {
+                    const newKpis = [...kpis];
+                    newKpis[idx].achieved = Number(e.target.value);
+                    setKpis(newKpis);
+                  }}
+                  className="border px-2 py-1 rounded"
+                  required
+                />
+              </div>
             </div>
           ))}
           <button
