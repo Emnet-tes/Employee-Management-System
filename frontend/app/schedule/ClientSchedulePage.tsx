@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllSchedules, createSchedule } from "@/lib/sanity/utils/schedule";
+import { getAllSchedules } from "@/lib/sanity/utils/schedule";
 import { getEmployees } from "@/lib/sanity/utils/employee";
 import { Card, CardContent } from "@/component/card";
 import { Schedule } from "@/types/schedule";
@@ -12,21 +12,21 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import Loading from "../_component/Loading";
 
-export default function ClientSchedulePage({ session }: { session: any }) {
+interface Props {
+  session: {
+    user: {
+      employeeId: string;
+      role: string;
+    };
+  };
+} 
+export default function ClientSchedulePage({ session }: Props) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>(
     []
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    employeeId: "",
-    shift: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    notes: "",
-  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,20 +53,20 @@ export default function ClientSchedulePage({ session }: { session: any }) {
     );
   }, [session]);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    await createSchedule(formData);
-    alert("Schedule created!");
-    setFormData({
-      employeeId: "",
-      shift: "",
-      date: "",
-      startTime: "",
-      endTime: "",
-      notes: "",
-    });
-    getAllSchedules().then(setSchedules);
-  };
+  // const handleSubmit = async (e: any) => {
+  //   e.preventDefault();
+  //   await createSchedule(formData);
+  //   alert("Schedule created!");
+  //   setFormData({
+  //     employeeId: "",
+  //     shift: "",
+  //     date: "",
+  //     startTime: "",
+  //     endTime: "",
+  //     notes: "",
+  //   });
+  //   getAllSchedules().then(setSchedules);
+  // };
 
   const filteredSchedules =
     session?.user?.role === "employee"

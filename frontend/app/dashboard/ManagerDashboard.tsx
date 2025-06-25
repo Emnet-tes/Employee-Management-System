@@ -16,11 +16,22 @@ import Loading from "../_component/Loading";
 import { PieChart, Pie, Cell, Legend } from "recharts";
 import { Leave } from "@/types/leaves";
 
-interface AdminDashboardProps {
-  session: any;
+interface Props {
+  session: {
+    user: {
+      employeeId: string;
+    };
+  };
 }
 
-const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
+interface AttendanceChartData {
+  name: string;
+  Present: number;
+  Absent: number;
+  Off: number;
+}
+
+const ManagerDashboard: React.FC<Props> = ({ session }) => {
   const [employeeStats, setEmployeeStats] = useState({
     total: 0,
     active: 0,
@@ -31,19 +42,13 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
     total: 0,
     avgRating: 0,
   });
-  const [reviews, setReviews] = useState<any[]>([]);
-
-  type Attendance = {
-    name: string;
-    Present: number;
-    Absent: number;
-    Off: number;
-  };
-  const [attendanceData, setAttendanceData] = useState<Attendance[]>([]);
+  const [attendanceData, setAttendanceData] = useState<AttendanceChartData[]>(
+    []
+  );
   const [leaveData, setLeaveData] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
   const [pieMode, setPieMode] = useState<"reason" | "status">("reason");
-  const [pieData, setPieData] = useState<any[]>([]);
+  const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
   const pieColors = [
     "#60a5fa",
     "#34d399",
@@ -108,40 +113,38 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
 
         const leaveData = await getAllLeaves();
         // Filter leaveData to only those in the manager's department
-        const teamLeaves = leaveData.filter((l: any) =>
+        const teamLeaves = leaveData.filter((l: Leave) =>
           teamIds.includes(l.employee?._id)
         );
         setLeaveData(teamLeaves);
         const pending = teamLeaves.filter(
-          (l: any) => l.status === "pending"
+          (l: Leave) => l.status === "pending"
         ).length;
         setLeaveStats({ total: teamLeaves.length, pending });
 
         const res = await fetch(
           `/api/performance?reviewerId=${session.user.employeeId}`
         );
-        const teamPerformance = await res.json();
+        const teamPerformance: { rating?: number }[] = await res.json();
         const avgRating =
-          teamPerformance.reduce(
-            (sum: number, p: any) => sum + (p.rating || 0),
-            0
-          ) / (teamPerformance.length || 1);
+          teamPerformance.reduce((sum: number, p) => sum + (p.rating || 0), 0) /
+          (teamPerformance.length || 1);
         setPerformanceStats({ total: teamPerformance.length, avgRating });
-      } catch (err) {
+      } catch {
         setAttendanceData([]);
       } finally {
         setLoading(false);
       }
     };
     fetchStatsAndAttendance();
-  }, []);
+  }, [session.user.employeeId]);
 
   useEffect(() => {
     // Pie chart data
     if (pieMode === "reason") {
       // Group by type (not reason)
       const typeCounts: Record<string, number> = {};
-      leaveData.forEach((l: any) => {
+      leaveData.forEach((l: Leave) => {
         const type = l.type || "Other";
         typeCounts[type] = (typeCounts[type] || 0) + 1;
       });
@@ -151,7 +154,7 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
     } else {
       // Group by status
       const statusCounts: Record<string, number> = {};
-      leaveData.forEach((l: any) => {
+      leaveData.forEach((l: Leave) => {
         const status = l.status || "unknown";
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
@@ -159,7 +162,7 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
         Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
       );
     }
-  }, [leaveStats, pieMode]);
+  }, [leaveStats, pieMode, leaveData]);
 
   if (loading) return <Loading />;
 
@@ -218,8 +221,8 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
       </Card>
       <div className="flex-1 bg-white rounded-lg shadow p-6 flex flex-col transition-transform transform hover:scale-105 ">
         <h2 className="text-lg font-bold mb-4 text-gray-800">
-            Team Leave request  Overview
-          </h2>
+          Team Leave request Overview
+        </h2>
         <div className="flex gap-2 mb-4">
           <button
             className={`px-4 py-2 rounded ${
@@ -242,26 +245,26 @@ const ManagerDashboard: React.FC<AdminDashboardProps> = ({ session }) => {
             By Status
           </button>
         </div>
-        <div className="flex flex-col items-center" > 
-        <PieChart width={320} height={320} >
-          <Pie
-            data={pieData}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
-            label
-          >
-            {pieData.map((entry, idx) => (
-              <Cell
-                key={`cell-${idx}`}
-                fill={pieColors[idx % pieColors.length]}
-              />
-            ))}
-          </Pie>
-          <Legend />
-        </PieChart>
+        <div className="flex flex-col items-center">
+          <PieChart width={320} height={320}>
+            <Pie
+              data={pieData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              label
+            >
+              {pieData.map((entry, idx) => (
+                <Cell
+                  key={`cell-${idx}`}
+                  fill={pieColors[idx % pieColors.length]}
+                />
+              ))}
+            </Pie>
+            <Legend />
+          </PieChart>
         </div>
       </div>
 

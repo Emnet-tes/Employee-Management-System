@@ -9,6 +9,7 @@ type PerformanceInput = {
   kpis: string[];
   feedback: string;
   rating: number;
+  goals: string[];
 };
 
 export async function createPerformance(
@@ -20,6 +21,7 @@ export async function createPerformance(
     reviewer: { _type: "reference", _ref: data.reviewerId },
     date: data.date,
     kpis: data.kpis,
+    goals: data.goals,
     feedback: data.feedback,
     rating: data.rating,
   });
@@ -30,6 +32,7 @@ export async function createPerformance(
     date,
     kpis,
     feedback,
+    goals,
     rating,
     employee->{
       _id,
@@ -67,8 +70,8 @@ export async function getAllPerformances(): Promise<Performance[]> {
   } | order(date desc)
 `;
 
-  const results = await client.fetch(query);
-  return results as Performance[];
+  const results: Performance[] = await client.fetch(query);
+  return results;
 }
 
 // Read by ID
@@ -81,6 +84,7 @@ export async function getPerformanceById(
     date,
     kpis,
     feedback,
+    goals,
     rating,
     employee->{
       _id,
@@ -104,6 +108,7 @@ type PerformanceUpdateInput = {
   reviewerId?: string;
   date?: string;
   kpis?: string[];
+  goals?:string[];
   feedback?: string;
   rating?: number;
 };
@@ -112,7 +117,7 @@ export async function updatePerformance(
   id: string,
   updates: PerformanceUpdateInput
 ): Promise<Performance> {
-  const patch: Record<string, any> = {};
+  const patch: Record<string, unknown> = {};
 
   if (updates.employeeId) {
     patch["employee"] = { _type: "reference", _ref: updates.employeeId };
@@ -122,6 +127,7 @@ export async function updatePerformance(
   }
   if (updates.date) patch["date"] = updates.date;
   if (updates.kpis) patch["kpis"] = updates.kpis;
+  if (updates.goals) patch["goals"] = updates.goals;
   if (updates.feedback) patch["feedback"] = updates.feedback;
   if (typeof updates.rating === "number") patch["rating"] = updates.rating;
 
@@ -156,7 +162,9 @@ export async function deletePerformance(id: string): Promise<{ _id: string }> {
   return result;
 }
 
-export async function getPerformancesByReviewer(reviewerId: string): Promise<Performance[]> {
+export async function getPerformancesByReviewer(
+  reviewerId: string
+): Promise<Performance[]> {
   const query = `
     *[_type == "performance" && reviewer._ref == $reviewerId]{
       _id,
@@ -178,7 +186,9 @@ export async function getPerformancesByReviewer(reviewerId: string): Promise<Per
   return results as Performance[];
 }
 
-export async function getPerformanceByEmployeeId(employeeId: string): Promise<Performance[]> {
+export async function getPerformanceByEmployeeId(
+  employeeId: string
+): Promise<Performance[]> {
   const query = `
     *[_type == "performance" && employee._ref == $employeeId]{
       _id,
@@ -192,7 +202,6 @@ export async function getPerformanceByEmployeeId(employeeId: string): Promise<Pe
       }
     } | order(date desc)
   `;
-   const results = await client.fetch(query, { employeeId });
+  const results = await client.fetch(query, { employeeId });
   return results as Performance[];
 }
-

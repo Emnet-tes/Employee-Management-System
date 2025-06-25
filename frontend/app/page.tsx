@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+
 
 export default async function Home() {
   console.log("Checking authentication...");

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 const PerformancePage = async () => {
   const session = await auth();
   const role = session?.user?.role;
-  const employeeId = session?.user?.employeeId;
   // let userData = null;
 
   // if (employeeId) {
@@ -27,12 +26,12 @@ const PerformancePage = async () => {
     const { default: ManagerPerformancePage } = await import(
       "./ManagerPerformancePage"
     );
-    return <ManagerPerformancePage session={session} />;
+    return <ManagerPerformancePage session={session as { user: { employeeId: string } }}/>;
   } else if (role === "employee") {
     const { default: EmployeePerformancePage } = await import(
       "./EmployeePerformancePage"
     );
-    return <EmployeePerformancePage session={session} />;
+    return <EmployeePerformancePage session={session as { user: { employeeId: string } }} />;
   } else {
     redirect("/login");
   }

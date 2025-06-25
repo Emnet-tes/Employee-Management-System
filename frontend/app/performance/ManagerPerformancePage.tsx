@@ -7,7 +7,15 @@ import { getEmployees } from "@/lib/sanity/utils/employee";
 import { Employee } from "@/types/employee";
 import Loading from "../_component/Loading";
 
-const ManagerPerformancePage = ({ session }: { session: any }) => {
+interface Props {
+  session: {
+    user: {
+      employeeId: string;
+    };
+  };
+}
+
+const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
   const [reviews, setReviews] = useState<Performance[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +45,7 @@ const ManagerPerformancePage = ({ session }: { session: any }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!session?.user?.id) return;
+      if (!session?.user?.employeeId) return;
       try {
         const res = await fetch(
           `/api/performance?reviewerId=${session.user.employeeId}`

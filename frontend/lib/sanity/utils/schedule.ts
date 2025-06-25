@@ -91,18 +91,24 @@ export async function updateSchedule(
   id: string,
   updates: ScheduleUpdateInput
 ): Promise<Schedule> {
-  const patch: Record<string, any> = {};
+  const patch: Partial<ScheduleUpdateInput> = {};
 
   if (updates.shift) patch["shift"] = updates.shift;
   if (updates.date) patch["date"] = updates.date;
   if (updates.startTime) patch["startTime"] = updates.startTime;
   if (updates.endTime) patch["endTime"] = updates.endTime;
   if (updates.notes) patch["notes"] = updates.notes;
+
+  // Use a separate object for Sanity patch to avoid TS errors
+  const sanityPatch: Record<string, unknown> = { ...patch };
   if (updates.employeeId) {
-    patch["employee"] = { _type: "reference", _ref: updates.employeeId };
+    sanityPatch["employee"] = {
+      _type: "reference",
+      _ref: updates.employeeId,
+    };
   }
 
-  await client.patch(id).set(patch).commit();
+  await client.patch(id).set(sanityPatch).commit();
 
   const query = `*[_type == "schedule" && _id == $id][0]{
     _id,

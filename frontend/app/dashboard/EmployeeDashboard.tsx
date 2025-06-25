@@ -18,12 +18,25 @@ const leaveSummary = {
   annual: 6,
 };
 
-interface EmployeeDashboardProps {
-  session: any;
+interface Props {
+  session: {
+    user: {
+      employeeId: string;
+    };
+  };
 }
 
-const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+interface AttendanceChartData {
+  name: string;
+  Present: number;
+  Absent: number;
+  Off: number;
+}
+
+const EmployeeDashboard: React.FC<Props> = ({ session }) => {
+  const [attendanceData, setAttendanceData] = useState<AttendanceChartData[]>(
+    []
+  );
   const [performance, setPerformance] = useState<{
     date: string;
     rating: number;
@@ -71,17 +84,19 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
       startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
       const endOfLastWeek = new Date(startOfThisWeek);
       endOfLastWeek.setDate(startOfThisWeek.getDate() - 1); // Saturday
-      const lastWeekRecords = (records || []).filter((rec: any) => {
-        const recDate = new Date(rec.date);
-        return recDate >= startOfLastWeek && recDate <= endOfLastWeek;
-      });
+      const lastWeekRecords = (records || []).filter(
+        (rec: { date: string }) => {
+          const recDate = new Date(rec.date);
+          return recDate >= startOfLastWeek && recDate <= endOfLastWeek;
+        }
+      );
       // Group by day of week
       const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const grouped: Record<
         string,
         { Present: number; Absent: number; Off: number }
       > = {};
-      lastWeekRecords.forEach((rec: any) => {
+      lastWeekRecords.forEach((rec: { date: string; status: string }) => {
         const date = new Date(rec.date);
         const day = days[date.getDay() === 0 ? 6 : date.getDay() - 1];
         if (!grouped[day]) grouped[day] = { Present: 0, Absent: 0, Off: 0 };
@@ -89,7 +104,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
         else if (rec.status === "Absent") grouped[day].Absent += 1;
         else grouped[day].Off += 1;
       });
-      const chartData = days.map((day) => ({
+      const chartData: AttendanceChartData[] = days.map((day) => ({
         name: day,
         Present: grouped[day]?.Present || 0,
         Absent: grouped[day]?.Absent || 0,

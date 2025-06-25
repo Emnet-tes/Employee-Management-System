@@ -14,6 +14,8 @@ import { getEmployees } from "@/lib/sanity/utils/employee";
 import { getAttendances } from "@/lib/sanity/utils/attendance";
 import Loading from "../_component/Loading";
 import { PieChart, Pie, Cell, Legend } from "recharts";
+import { Attendance } from "@/types/attendance";
+import { Leave } from "@/types/leaves";
 
 const AdminDashboard = () => {
   const [employeeStats, setEmployeeStats] = useState({
@@ -22,11 +24,13 @@ const AdminDashboard = () => {
     terminated: 0,
     onLeave: 0,
   });
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [attendanceData, setAttendanceData] = useState<
+    { name: string; Present: number; Absent: number; "on leave": number }[]
+  >([]);
   const [loading, setLoading] = useState(true);
-  const [leaveData, setLeaveData] = useState<any[]>([]);
+  const [leaveData, setLeaveData] = useState<Leave[]>([]);
   const [pieMode, setPieMode] = useState<"type" | "status">("type");
-  const [pieData, setPieData] = useState<any[]>([]);
+  const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
   const [performanceStats, setPerformanceStats] = useState({
     total: 0,
     avgRating: 0,
@@ -45,12 +49,6 @@ const AdminDashboard = () => {
     "#6366f1",
     "#f472b6",
   ];
-
-  const leaveSummary = {
-    available: 8,
-    taken: 16,
-    annual: 24,
-  };
 
   useEffect(() => {
     async function fetchStats() {
@@ -82,7 +80,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     async function fetchAttendance() {
       try {
-        const records = await getAttendances();
+        const records: Attendance[] = await getAttendances();
         // Group by day of week and status
         const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const grouped: Record<
@@ -106,7 +104,7 @@ const AdminDashboard = () => {
           "on leave": grouped[day]?.["on leave"] || 0,
         }));
         setAttendanceData(chartData);
-      } catch (err) {
+      } catch {
         setAttendanceData([]);
       } finally {
         setLoading(false);
@@ -118,7 +116,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     async function fetchLeaves() {
       const res = await fetch("/api/leaves");
-      const data = await res.json();
+      const data: Leave[] = await res.json();
       setLeaveData(data);
     }
     fetchLeaves();
@@ -127,7 +125,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (pieMode === "type") {
       const typeCounts: Record<string, number> = {};
-      leaveData.forEach((l: any) => {
+      leaveData.forEach((l: Leave) => {
         const type = l.type || "Other";
         typeCounts[type] = (typeCounts[type] || 0) + 1;
       });
@@ -136,7 +134,7 @@ const AdminDashboard = () => {
       );
     } else {
       const statusCounts: Record<string, number> = {};
-      leaveData.forEach((l: any) => {
+      leaveData.forEach((l: Leave) => {
         const status = l.status || "unknown";
         statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
@@ -150,13 +148,13 @@ const AdminDashboard = () => {
     async function fetchPerformance() {
       try {
         const res = await fetch("/api/performance");
-        const data = await res.json();
+        const data: { rating?: number }[] = await res.json();
         const total = data.length;
         const avgRating =
-          data.reduce((sum: number, p: any) => sum + (p.rating || 0), 0) /
+          data.reduce((sum: number, p) => sum + (p.rating || 0), 0) /
           (total || 1);
         setPerformanceStats({ total, avgRating });
-      } catch (err) {
+      } catch {
         setPerformanceStats({ total: 0, avgRating: 0 });
       }
     }
@@ -169,7 +167,9 @@ const AdminDashboard = () => {
       return;
     }
     const total = leaveData.length;
-    const pending = leaveData.filter((l: any) => l.status === "pending").length;
+    const pending = leaveData.filter(
+      (l: Leave) => l.status === "pending"
+    ).length;
     setLeaveStats({ total, pending });
   }, [leaveData]);
 
@@ -250,8 +250,8 @@ const AdminDashboard = () => {
       </Card>
       <div className=" flex-1 bg-white rounded-lg shadow p-6 flex flex-col  transform hover:scale-105 transition-transform">
         <h2 className="text-lg font-bold mb-4 text-gray-800">
-            Employees Leave request  Overview
-          </h2>
+          Employees Leave request Overview
+        </h2>
         <div className="flex gap-2 mb-4">
           <button
             className={`px-4 py-2 rounded ${
@@ -274,7 +274,11 @@ const AdminDashboard = () => {
             By Status
           </button>
         </div>
-        <PieChart width={320} height={320} className="flex flex-col items-center">
+        <PieChart
+          width={320}
+          height={320}
+          className="flex flex-col items-center"
+        >
           <Pie
             data={pieData}
             dataKey="value"
