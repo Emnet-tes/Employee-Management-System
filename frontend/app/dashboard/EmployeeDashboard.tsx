@@ -2,145 +2,204 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/component/card";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
-import { getLeaveById } from "@/lib/sanity/utils/leaves";
-import { getPerformanceById } from "@/lib/sanity/utils/performance";
-import Loading from "../_component/Loading";
 
-interface EmployeeDashboardProps {
-  session: any;
+const leaveSummary = {
+  available: 4,
+  taken: 2,
+  annual: 6,
+};
+
+interface Props {
+  session: {
+    user: {
+      employeeId: string;
+    };
+  };
 }
 
-const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ session }) => {
-  const [attendanceHistory, setAttendanceHistory] = useState<
-    { date: string; status: string }[]
-  >([]);
-  const [leaveSummary, setLeaveSummary] = useState({
-    available: 0,
-    taken: 0,
-    annual: 0,
-  });
-  const [reviews, setReviews] = useState<any[]>([]);
+interface AttendanceChartData {
+  name: string;
+  Present: number;
+  Absent: number;
+  Off: number;
+}
+
+const EmployeeDashboard: React.FC<Props> = ({ session }) => {
+  const [attendanceData, setAttendanceData] = useState<AttendanceChartData[]>(
+    []
+  );
+  const [performance, setPerformance] = useState<{
+    date: string;
+    rating: number;
+    feedback: string;
+    reviewer?: { name?: string };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      const employeeId = session?.user?.employeeId;
-      if (!employeeId) return;
-
-      const records = (await getAttendancesByEmployeeId(employeeId)) || [];
-      const sorted = records.sort(
-        (a: any, b: any) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+    async function fetchPerformance() {
+      if (!session?.user?.employeeId) return;
+      setLoading(true);
+      const res = await fetch(
+        `/api/performance?employeeId=${session.user.employeeId}`
       );
-      setAttendanceHistory(sorted.slice(0, 14));
-      const leavesRaw = (await getLeaveById(employeeId)) || [];
-      const leaves = Array.isArray(leavesRaw)
-        ? leavesRaw
-        : [leavesRaw].filter(Boolean);
-      const taken = leaves.filter((l: any) => l.status === "approved").length;
-      const annual = 6;
-      setLeaveSummary({ available: annual - taken, taken, annual });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Sort by date descending and pick the latest
+        const latest = data.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        )[0];
+        setPerformance({
+          date: latest.date,
+          rating: latest.rating,
+          feedback: latest.feedback,
+          reviewer: latest.reviewer,
+        });
+      } else {
+        setPerformance(null);
+      }
+      setLoading(false);
     }
-
-    fetchData();
+    fetchPerformance();
   }, [session]);
 
   useEffect(() => {
-    const fetchEmployeeReviews = async () => {
+    async function fetchAttendance() {
       if (!session?.user?.employeeId) return;
-      try {
-        const res = await fetch(
-          `/api/performance?employeeId=${session.user.employeeId}`
-        );
-        const data = await res.json();
-        setReviews(data);
-      } catch (error) {
-        console.log("Error fetching employee performance:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEmployeeReviews();
+      const records = await getAttendancesByEmployeeId(session.user.employeeId);
+      // Filter records to only those from the previous week
+      const now = new Date();
+      const startOfThisWeek = new Date(now);
+      startOfThisWeek.setDate(now.getDate() - now.getDay()); // Sunday
+      const startOfLastWeek = new Date(startOfThisWeek);
+      startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+      const endOfLastWeek = new Date(startOfThisWeek);
+      endOfLastWeek.setDate(startOfThisWeek.getDate() - 1); // Saturday
+      const lastWeekRecords = (records || []).filter(
+        (rec: { date: string }) => {
+          const recDate = new Date(rec.date);
+          return recDate >= startOfLastWeek && recDate <= endOfLastWeek;
+        }
+      );
+      // Group by day of week
+      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const grouped: Record<
+        string,
+        { Present: number; Absent: number; Off: number }
+      > = {};
+      lastWeekRecords.forEach((rec: { date: string; status: string }) => {
+        const date = new Date(rec.date);
+        const day = days[date.getDay() === 0 ? 6 : date.getDay() - 1];
+        if (!grouped[day]) grouped[day] = { Present: 0, Absent: 0, Off: 0 };
+        if (rec.status === "Present") grouped[day].Present += 1;
+        else if (rec.status === "Absent") grouped[day].Absent += 1;
+        else grouped[day].Off += 1;
+      });
+      const chartData: AttendanceChartData[] = days.map((day) => ({
+        name: day,
+        Present: grouped[day]?.Present || 0,
+        Absent: grouped[day]?.Absent || 0,
+        Off: grouped[day]?.Off || 0,
+      }));
+      setAttendanceData(chartData);
+    }
+    fetchAttendance();
   }, [session]);
 
-  if (loading) return <Loading />;
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 text-black">
-      {/* Attendance History */}
-      <Card className="col-span-1 lg:col-span-2">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ">
+      <Card className="col-span-2 shadow-lg transition-transform transform hover:scale-105">
         <CardContent>
-          <h2 className="text-lg font-bold mb-2 text-black">
-            My Attendance (Last 2 Weeks)
-          </h2>
-          <div className="grid grid-cols-7 gap-2">
-            {attendanceHistory.map((record, idx) => (
-              <div
-                key={idx}
-                className={`h-10 flex items-center justify-center rounded text-white text-sm font-medium ${
-                  record.status === "Present"
-                    ? "bg-green-500"
-                    : record.status === "Absent"
-                      ? "bg-red-500"
-                      : "bg-gray-400"
-                }`}
-              >
-                {new Date(record.date).toLocaleDateString("en-US", {
-                  weekday: "short",
-                })}
-              </div>
-            ))}
-          </div>
+          <h2 className="text-lg font-bold mb-2">Last Week Attendance</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={attendanceData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="Present" fill="#4ade80" />
+              <Bar dataKey="Absent" fill="#f87171" />
+              <Bar dataKey="Off" fill="#a3a3a3" />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      {/* Leave Summary */}
-      <Card>
+      <Card className=" shadow-lg transition-transform transform hover:scale-105">
         <CardContent>
-          <h2 className="text-lg font-bold mb-2 text-black">Leave Summary</h2>
-          <ul className="text-black">
-            <li>Available: {leaveSummary.available}</li>
-            <li>Taken: {leaveSummary.taken}</li>
-            <li>Annual: {leaveSummary.annual}</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Performance Overview */}
-      <Card>
-        <CardContent>
-          <h2 className="text-lg font-bold mb-2 text-black">
-            Performance Overview
+          <h2 className="text-lg font-bold mb-2">
+            Latest Performance Overview
           </h2>
           {loading ? (
-            <p className="text-black">Loading...</p>
-          ) : reviews && reviews.length > 0 ? (
-            <div>
-              <p>
-                <strong>Date:</strong> {reviews[0].date}
-              </p>
-              <p>
-                <strong>Rating:</strong> {reviews[0].rating}
-              </p>
-              <p>
-                <strong>Feedback:</strong> {reviews[0].feedback}
-              </p>
-              <div className="mt-2">
-                <p className="font-semibold text-black">Goals:</p>
-                <ul className="list-disc list-inside text-black">
-                  {reviews[0].goals?.map((goal: string, i: number) => (
-                    <li key={i} className="text-black">
-                      {goal}
-                    </li>
-                  ))}
-                </ul>
+            <div className="flex flex-col gap-2 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/3" />
+              <div className="h-4 bg-gray-200 rounded w-1/4" />
+              <div className="h-4 bg-gray-200 rounded w-2/3" />
+            </div>
+          ) : performance ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-700">Date:</span>
+                <span className="text-gray-900">{performance.date}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-700">Rating:</span>
+                <span className="text-yellow-500 font-bold">
+                  {performance.rating} / 5
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-700">
+                  Reviewed by:
+                </span>
+                <span className="text-blue-700 font-medium">
+                  {performance.reviewer?.name || "N/A"}
+                </span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Feedback:</span>
+                <p className="mt-1 text-gray-800 bg-gray-50 rounded p-2 border border-gray-100">
+                  {performance.feedback}
+                </p>
               </div>
             </div>
           ) : (
-            <p className="text-black">No performance data available.</p>
+            <p>No performance data available.</p>
           )}
         </CardContent>
+      </Card>
+      <Card className="shadow-lg transition-transform transform hover:scale-105">
+        <div className="p-4">
+          <h3 className="text-xl font-semibold text-gray-800">
+            Available Leave
+          </h3>
+          <strong className="text-2xl text-gray-900">
+            {leaveSummary.available}
+          </strong>
+        </div>
+      </Card>
+      <Card className="shadow-lg transition-transform transform hover:scale-105">
+        <div className="p-4">
+          <h3 className="text-xl font-semibold text-gray-800">Taken Leave</h3>
+          <strong className="text-2xl text-gray-900">
+            {leaveSummary.taken}
+          </strong>
+        </div>
+      </Card>
+      <Card className="shadow-lg transition-transform transform hover:scale-105">
+        <div className="p-4">
+          <h3 className="text-xl font-semibold text-gray-800">Annual Leave</h3>
+          <strong className="text-2xl text-gray-900">
+            {leaveSummary.annual}
+          </strong>
+        </div>
       </Card>
     </div>
   );

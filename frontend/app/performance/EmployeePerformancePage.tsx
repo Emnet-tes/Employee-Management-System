@@ -1,11 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/component/card";
 import { Performance } from "@/types/performance";
 import Loading from "../_component/Loading";
 
-const EmployeePerformancePage = ({ session }: { session: any }) => {
+interface Props {
+  session: {
+    user: {
+      employeeId: string;
+    };
+  };
+}
+
+
+const EmployeePerformancePage: React.FC<Props>= ({ session }) => {
   const [reviews, setReviews] = useState<Performance[]>([]) || [];
   const [loading, setLoading] = useState(true);
 
