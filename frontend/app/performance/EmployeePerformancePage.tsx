@@ -12,14 +12,16 @@ interface Props {
   };
 }
 
-
-const EmployeePerformancePage: React.FC<Props>= ({ session }) => {
+const EmployeePerformancePage: React.FC<Props> = ({ session }) => {
   const [reviews, setReviews] = useState<Performance[]>([]) || [];
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEmployeeReviews = async () => {
-      if (!session?.user?.employeeId) return;
+      if (!session?.user?.employeeId) {
+        setLoading(false); 
+        return;
+      }
 
       try {
         console.log(
@@ -43,7 +45,7 @@ const EmployeePerformancePage: React.FC<Props>= ({ session }) => {
   }, [session]);
 
   if (loading) {
-    return <Loading/>;
+    return <Loading />;
   }
 
   return (
