@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Attendance } from "@/types/attendance";
 import { calculateWorkHours } from "@/app/utils/utils";
-import { getEmployeesByUserId } from "@/lib/sanity/utils/employee";
+import { getEmployeeById, getEmployeesByUserId } from "@/lib/sanity/utils/employee";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
 import Loading from "@/app/_component/Loading";
 import { getAttendanceColumns } from "./AttendanceColums";
@@ -118,7 +118,18 @@ export default function EmployeeAttendance({ userId }: Props) {
       });
 
       if (!res.ok) throw new Error(await res.text());
-
+      const employee = await getEmployeeById(employeeId);
+      if(employee?.employmentStatus === "on_leave") {
+      try{
+        await fetch(`/api/employee/${employeeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ employmentStatus: "active" }),
+        });
+      }catch(err) {
+        console.error("Failed to update employee status", err);
+        alert("Failed to update employee status.");}
+      }
       await refreshAttendance();
     } catch (err) {
       console.error("Check-out error:", err);

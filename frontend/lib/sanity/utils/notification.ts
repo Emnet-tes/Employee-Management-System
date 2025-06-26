@@ -7,11 +7,21 @@ export async function getUserNotifications(userId: string) {
   );
 }
 
+export type Notification = {
+  _id: string;
+  _type: "notification";
+  recipient: { _type: "reference"; _ref: string };
+  message: string;
+  type: "schedule" | "leave_request" | "leave_status";
+  read: boolean;
+  timestamp: string;
+};
+
 export async function createNotification(data: {
   recipientId: string;
   message: string;
   type: "schedule" | "leave_request" | "leave_status";
-}): Promise<any> {
+}): Promise<Notification> {
   return await client.create({
     _type: "notification",
     recipient: {

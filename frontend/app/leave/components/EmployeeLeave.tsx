@@ -114,12 +114,10 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
     const fetchData = async () => {
       await fetchLeaves();
       const employees: Employee[] = await getEmployees();
-      console
       const manager = employees.filter(
         (emp) =>
           emp.department?._id === departmentId && emp.role.title === "manager"
       );
-      console.log(manager,"manager");
       setManager(manager || null);
     };
     fetchData();

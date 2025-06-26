@@ -1,5 +1,4 @@
 import {
-  deleteAttendance,
   updateAttendance,
 } from "@/lib/sanity/utils/attendance";
 import { NextRequest, NextResponse } from "next/server";
