@@ -4,11 +4,10 @@ import ManagerDashboard from "./ManagerDashboard";
 import EmployeeDashboard from "./EmployeeDashboard";
 import { auth } from "@/lib/auth";
 
-
-
 const DashboardPage = async () => {
   const session = await auth();
   const role = session?.user?.role;
+  console.log("role", session?.user?.employeeId, role);
 
   if (!session || !role) return <div>Loading...</div>;
 
@@ -20,7 +19,11 @@ const DashboardPage = async () => {
           session={session as { user: { employeeId: string } }}
         />
       )}
-      {role === "employee" && <EmployeeDashboard session={session as { user: { employeeId: string } }} />}
+      {role === "employee" && (
+        <EmployeeDashboard
+          session={session as { user: { employeeId: string } }}
+        />
+      )}
     </div>
   );
 };

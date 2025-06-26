@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
+import Loading from "../_component/Loading";
 
 const leaveSummary = {
   available: 4,
@@ -43,12 +44,15 @@ const EmployeeDashboard: React.FC<Props> = ({ session }) => {
     feedback: string;
     reviewer?: { name?: string };
   } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [attendanceLoaded, setAttendanceLoaded] = useState(false);
+  const [performanceLoaded, setPerformanceLoaded] = useState(false);
 
   useEffect(() => {
     async function fetchPerformance() {
-      if (!session?.user?.employeeId) return;
-      setLoading(true);
+      if (!session?.user?.employeeId) {
+        setPerformanceLoaded(true);
+        return;
+      }
       const res = await fetch(
         `/api/performance?employeeId=${session.user.employeeId}`
       );
@@ -67,14 +71,17 @@ const EmployeeDashboard: React.FC<Props> = ({ session }) => {
       } else {
         setPerformance(null);
       }
-      setLoading(false);
+      setPerformanceLoaded(true);
     }
     fetchPerformance();
   }, [session]);
 
   useEffect(() => {
     async function fetchAttendance() {
-      if (!session?.user?.employeeId) return;
+      if (!session?.user?.employeeId) {
+        setAttendanceLoaded(true);
+        return;
+      }
       const records = await getAttendancesByEmployeeId(session.user.employeeId);
       // Filter records to only those from the previous week
       const now = new Date();
@@ -111,9 +118,13 @@ const EmployeeDashboard: React.FC<Props> = ({ session }) => {
         Off: grouped[day]?.Off || 0,
       }));
       setAttendanceData(chartData);
+      setAttendanceLoaded(true);
     }
     fetchAttendance();
   }, [session]);
+
+  const allLoaded = attendanceLoaded && performanceLoaded;
+  if (!allLoaded) return <Loading />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ">
@@ -137,7 +148,7 @@ const EmployeeDashboard: React.FC<Props> = ({ session }) => {
           <h2 className="text-lg font-bold mb-2">
             Latest Performance Overview
           </h2>
-          {loading ? (
+          {!performanceLoaded ? (
             <div className="flex flex-col gap-2 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-1/3" />
               <div className="h-4 bg-gray-200 rounded w-1/4" />

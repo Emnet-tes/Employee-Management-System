@@ -112,26 +112,29 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </svg>
               <span className="absolute top-1 right-1 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <button className="p-1 rounded-full hover:bg-gray-200 transition cursor-pointer">
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 transition cursor-pointer"
+              onClick={() => (window.location.href = "/profile")}
+            >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 text-gray-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 12a4 4 0 100-8 4 4 0 000 8z"
-                />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 12a4 4 0 100-8 4 4 0 000 8z"
+              />
               </svg>
             </button>
           </div>
@@ -157,14 +160,15 @@ const NavItem = ({
   return (
     <a
       href={href}
-      className={`flex items-center gap-3 px-4 py-2 rounded-md transition ${
+      className={`flex items-center gap-4 px-4 py-2 rounded-md transition text-base ${
         isActive
           ? "bg-blue-100 text-blue-700 font-semibold"
           : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
       }`}
+      style={{ fontSize: "1.05rem" }}
     >
-      {icon}
-      <span>{label}</span>
+      <span className="flex items-center justify-center w-6 h-6">{icon}</span>
+      <span className="ml-2">{label}</span>
     </a>
   );
 };

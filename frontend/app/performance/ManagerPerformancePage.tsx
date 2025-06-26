@@ -64,9 +64,6 @@ const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
 
   if (loading) return <Loading />;
 
-  if (reviews.length === 0) {
-    return <Loading />;
-  }
 
   return (
     <div className="p-4 overflow-auto">
@@ -96,7 +93,7 @@ const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
           </tr>
         </thead>
         <tbody>
-          {reviews.map((review) => (
+          {reviews?.map((review) => (
             <tr key={review._id} className="hover:bg-gray-50">
               <td className="border px-4 py-2 text-black">
                 {review?.employee?.name}
