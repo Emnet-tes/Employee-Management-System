@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
   Home,
@@ -18,7 +18,69 @@ import { useSession } from "next-auth/react";
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { data: session } = useSession();
-  console.log("Session in Layout:", session);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loadingNotif, setLoadingNotif] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Fetch notifications when bell is clicked
+  const fetchNotifications = async () => {
+    if (!session?.user?.employeeId) return;
+    setLoadingNotif(true);
+    try {
+      const res = await fetch(
+        `/api/notification?userId=${session.user?.employeeId}`
+      );
+      const data = await res.json();
+      setNotifications(data || []);
+    } catch {
+      setNotifications([]);
+    }
+    setLoadingNotif(false);
+  };
+
+  // Mark all unread as read when closing popup
+  const markAllAsRead = async () => {
+    const unread = notifications.filter((n) => !n.read);
+    for (const n of unread) {
+      await fetch("/api/notification", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: n._id }),
+      });
+    }
+    // Optionally update UI
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  // Handle outside click to close popup
+  useEffect(() => {
+    if (!showNotifications) return;
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+        markAllAsRead();
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+    // eslint-disable-next-line
+  }, [showNotifications, notifications]);
+
+  // Fetch notifications on mount so the badge is always up-to-date
+  useEffect(() => {
+    if (!session?.user?.employeeId) return;
+    fetchNotifications();
+    // eslint-disable-next-line
+  }, [session?.user?.employeeId]);
+
+  // Refetch notifications after closing the popup
+  useEffect(() => {
+    if (!showNotifications && session?.user?.employeeId) {
+      fetchNotifications();
+    }
+    // eslint-disable-next-line
+  }, [showNotifications, session?.user?.employeeId]);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -95,23 +157,88 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 year: "numeric",
               })}
             </div>
-            <button className="relative p-2 rounded-full hover:bg-gray-200 transition cursor-pointer">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-gray-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                className="relative p-2 rounded-full hover:bg-gray-200 transition cursor-pointer"
+                onClick={async () => {
+                  setShowNotifications((prev) => !prev);
+                  if (!showNotifications) await fetchNotifications();
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-              <span className="absolute top-1 right-1 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
+                </svg>
+                {/* Unread badge with count */}
+                {notifications.filter((n) => !n.read).length > 0 && (
+                  <span className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs rounded-full">
+                    {notifications.filter((n) => !n.read).length}
+                  </span>
+                )}
+              </button>
+              {/* Notification Popup */}
+              {showNotifications && (
+                <div
+                  ref={notifRef}
+                  className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                >
+                  <div className="p-4 border-b font-semibold text-gray-700 flex justify-between items-center">
+                    Notifications
+                    <button
+                      className="text-xs text-blue-600 hover:underline"
+                      onClick={() => {
+                        setShowNotifications(false);
+                        markAllAsRead();
+                      }}
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {loadingNotif ? (
+                      <div className="p-4 text-gray-400 text-center">
+                        Loading...
+                      </div>
+                    ) : notifications.filter((n) => !n.read).length === 0 ? (
+                      <div className="p-4 text-gray-400 text-center">
+                        No new notification
+                      </div>
+                    ) : (
+                      notifications
+                        .filter((n) => !n.read)
+                        .map((n) => (
+                          <div
+                            key={n._id}
+                            className="px-4 py-3 border-b last:border-b-0 bg-blue-50 text-black"
+                          >
+                            <div className="font-medium">
+                              {n.title || "Notification"}
+                            </div>
+                            <div className="text-sm">{n.message}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {n.createdAt
+                                ? new Date(n.createdAt).toLocaleString()
+                                : ""}
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Profile Button */}
             <button
               className="p-1 rounded-full hover:bg-gray-200 transition cursor-pointer"
               onClick={() => (window.location.href = "/profile")}
