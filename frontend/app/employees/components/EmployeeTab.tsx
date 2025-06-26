@@ -12,31 +12,48 @@ import Table from "../../_component/Table";
 import { Employee } from "@/types/employee";
 import { Role } from "@/types/role";
 import { Department } from "@/types/department";
+import { uploadToServer } from "@/app/utils/utils";
+import { useForm } from "react-hook-form";
+
 
 interface EmployeeFormState {
-  name?: string;
-  email?: string;
-  phone?: string;
-  position?: string;
-  departmentId?: string;
-  roleId?: string;
+  name: string;
+  email: string;
+  phone: string;
+  position: string;
+  departmentId: string;
+  roleId: string;
   startDate?: string;
   employmentStatus?: string;
-  documents?: File[];
+  photo?: FileList;
+  documents?: FileList;
 }
+
 
 const EmployeeTab = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState
+  } = useForm<EmployeeFormState>();
+
+  const {errors,isSubmitting} = formState;
+  
+
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDocuments, setSelectedDocuments] = useState<
-    { asset: { url: string } }[]
+    { asset: { url: string },_key:string }[]
   >([]);
+  const [removedDocumentKeys, setRemovedDocumentKeys] = useState<string[]>([]);
 
-  const [formState, setFormState] = useState<EmployeeFormState>({});
+  
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -61,13 +78,16 @@ const EmployeeTab = () => {
         getAllDepartments(),
       ]);
       setEmployees(emp || []);
-      console.log("employees", emp);
       setRoles(roleList || []);
       setDepartments(deptList || []);
       setLoading(false);
     }
     fetchData();
   }, []);
+
+  function handleRemoveDocument(docKey: string) {
+    setRemovedDocumentKeys((prev) => [...prev, docKey]);
+  }
 
   function handleShowDocuments(employee: Employee){
     setSelectedDocuments(employee?.documents ?? []);
@@ -80,23 +100,12 @@ const EmployeeTab = () => {
     setSelectedDocuments([]);
   };
 
-  async function uploadToServer(file: File, type: "image" | "file") {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("type", type);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) return alert("Failed to upload file");
-    return await res.json();
-  }
 
   function openModal(employee?: Employee) {
     if (employee) {
       setEditingEmployee(employee);
-      setFormState({
-        name: employee.user?.name ?? "",
+      reset({
+        name: employee.name ?? "",
         email: employee.user?.email ?? "",
         phone: employee.phone ?? "",
         position: employee.position ?? "",
@@ -105,49 +114,66 @@ const EmployeeTab = () => {
         startDate: employee.startDate ?? "",
         employmentStatus: employee.employmentStatus ?? "active",
       });
+      setSelectedDocuments(employee.documents ?? []);
+      setRemovedDocumentKeys([]); 
       setIsEditMode(true);
     } else {
       setEditingEmployee(null);
-      setFormState({});
+      reset({});
       setIsEditMode(false);
+      setRemovedDocumentKeys([]);
     }
     setShowModal(true);
   }
-
+  
   function closeModal() {
     setShowModal(false);
     setEditingEmployee(null);
-    setFormState({});
+    reset({});
   }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  
+  async function onFormSubmit(data: EmployeeFormState) {
     setLoading(true);
     if (isEditMode && editingEmployee) {
+      const newDocumentFiles = data.documents ? Array.from(data.documents) : [];
+      const uploadedDocs = [];
+      for (const doc of newDocumentFiles) {
+        if (doc.size > 0) {
+          uploadedDocs.push(await uploadToServer(doc, "file"));
+        }
+      }
+      const keptDocs =
+        editingEmployee?.documents?.filter(
+          (doc) => !removedDocumentKeys.includes(doc._key)
+        ) ?? [];
+
+      const documents = [
+        ...keptDocs.map((doc) => ({
+          _type: "file",
+          asset: { _type: "reference", _ref: doc.asset?._ref },
+          _key: doc._key,
+        })),
+        ...uploadedDocs.map((doc) => ({
+          _type: "file",
+          asset: { _type: "reference", _ref: doc._id },
+          _key: doc._id,
+        })),
+      ];
       try {
         const EmpRes = await fetch(`/api/employee/${editingEmployee._id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: editingEmployee.user._id,
-            roleId: formState.roleId as string,
-            name: formState.name as string,
-            phone: formState.phone as string,
+            roleId: data.roleId as string,
+            name: data.name as string,
+            phone: data.phone as string,
             photo: editingEmployee.photo,
-            employmentStatus: formState.employmentStatus as string,
-            departmentId: formState.departmentId as string,
-            position: formState.position as string,
-            startDate: formState.startDate as string,
-            documents: (editingEmployee?.documents?.map((doc) => ({
-              _type: "file",
-              asset: { _type: "reference", _ref: doc.asset?._ref },
-              _key: doc._key,
-            })) ?? []) as {
-              _type: "file";
-              asset: { _type: "reference"; _ref: string };
-              _key: string;
-            }[],
-          }),
+            employmentStatus: data.employmentStatus as string,
+            departmentId: data.departmentId as string,
+            position: data.position as string,
+            startDate: data.startDate as string,
+            documents,}),
         });
         if (!EmpRes.ok) throw new Error();
         const updatedEmp = await EmpRes.json();
@@ -159,41 +185,38 @@ const EmployeeTab = () => {
         alert("Failed to update employee");
       }
     } else {
-      const form = e.currentTarget;
-      const data = new FormData(form);
-      const name = data.get("name") as string;
-      const email = data.get("email") as string;
-      const phone = data.get("phone") as string;
-      const position = data.get("position") as string;
-      const departmentId = data.get("departmentId") as string;
-      const roleId = data.get("roleId") as string;
       const startDate = new Date().toISOString().slice(0, 10);
+      const photoFile = data?.photo && (data.photo as FileList)[0];
+      const documentFiles = data?.documents
+        ? Array.from(data.documents as FileList)
+        : [];
 
-      const photoFile = data.get("photo") as File;
-      const documentFiles = data.getAll("documents") as File[];
+        const uploadedPhoto =
+          photoFile && photoFile.size > 0
+            ? await uploadToServer(photoFile, "image")
+            : undefined;
 
-      const uploadedPhoto =
-        photoFile.size > 0
-          ? await uploadToServer(photoFile, "image")
-          : undefined;
-      const uploadedDocs = [];
-      for (const doc of documentFiles) {
-        if (doc.size > 0) {
-          uploadedDocs.push(await uploadToServer(doc, "file"));
+        const uploadedDocs = [];
+        for (const doc of documentFiles) {
+          if (doc.size > 0) {
+            uploadedDocs.push(await uploadToServer(doc, "file"));
+          }
         }
-      }
-
+      
       const userRes = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          email,
+          name: data.name,
+          email: data.email,
           password: "defaultPassword123",
-          roleId,
+          roleId: data.roleId,
         }),
       });
-      if (!userRes.ok) return alert("Email already exists or invalid");
+      if (!userRes.ok) {
+        setLoading(false);
+        return alert("Email already exists or invalid");
+      }
 
       const user = await userRes.json();
       const empRes = await fetch("/api/employee", {
@@ -201,9 +224,10 @@ const EmployeeTab = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user._id,
-          roleId,
-          name,
-          phone,
+          roleId: data.roleId,
+          name: data.name,
+          phone: data.phone,
+          startDate,
           photo: uploadedPhoto
             ? {
                 _type: "image",
@@ -211,9 +235,8 @@ const EmployeeTab = () => {
               }
             : undefined,
           employmentStatus: "active",
-          departmentId,
-          position,
-          startDate,
+          departmentId: data.departmentId,
+          position: data.position,
           documents: uploadedDocs.map((doc) => ({
             _type: "file",
             asset: { _type: "reference", _ref: doc._id },
@@ -222,19 +245,22 @@ const EmployeeTab = () => {
         }),
       });
 
-      if (!empRes.ok) return alert("Failed to create employee");
+      if (!empRes.ok) {
+        setLoading(false);
+        return alert("Failed to create employee");
+      }
     }
+
     const emp = await getEmployees();
     setEmployees(emp || []);
     closeModal();
     setLoading(false);
   }
-
   async function handleDelete(employeeId: string, userId: string) {
     if (!window.confirm("Are you sure?")) return;
     setLoading(true);
-    await fetch(`/api/user/${userId}`, { method: "DELETE" });
     await fetch(`/api/employee/${employeeId}`, { method: "DELETE" });
+    await fetch(`/api/user/${userId}`, { method: "DELETE" });
     const emp = await getEmployees();
     setEmployees(emp || []);
     setLoading(false);
@@ -246,7 +272,7 @@ const EmployeeTab = () => {
     <div className="p-6 space-y-6">
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 min-h-screen">
-          <div className="bg-white p-6 rounded-xl w-full max-w-lg relative">
+          <div className="bg-white p-6 rounded-xl w-full max-w-2xl relative">
             <button
               className="absolute top-2 right-2 cursor-pointer text-gray-500 hover:text-gray-700"
               onClick={closeModal}
@@ -256,93 +282,250 @@ const EmployeeTab = () => {
             <h2 className="text-xl font-semibold mb-4">
               {isEditMode ? "Edit Employee" : "Add Employee"}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                name="name"
-                defaultValue={formState.name}
-                placeholder="Name"
-                required
-                className="input-style w-full border rounded-md p-2"
-              />
-              <input
-                name="email"
-                defaultValue={formState.email}
-                placeholder="Email"
-                type="email"
-                required
-                className="input-style w-full border rounded-md p-2"
-                disabled={isEditMode}
-              />
-              <input
-                name="phone"
-                defaultValue={formState.phone}
-                placeholder="Phone"
-                required
-                className="input-style w-full border rounded-md p-2"
-              />
-              <input
-                name="position"
-                defaultValue={formState.position}
-                placeholder="Position"
-                required
-                className="input-style w-full border rounded-md p-2"
-              />
-              <select
-                name="roleId"
-                defaultValue={formState.roleId}
-                required
-                className="input-style w-full border rounded-md p-2"
-              >
-                <option value="">Select Role</option>
-                {roles.map((r) => (
-                  <option key={r._id} value={r._id}>
-                    {r.title}
-                  </option>
-                ))}
-              </select>
-              <select
-                name="departmentId"
-                defaultValue={formState.departmentId}
-                required
-                className="input-style w-full border rounded-md p-2"
-              >
-                <option value="">Select Department</option>
-                {departments.map((d) => (
-                  <option key={d._id} value={d._id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-              {!isEditMode && (
-                <>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Photo
+            <form
+              onSubmit={handleSubmit(onFormSubmit)}
+              className="space-y-4"
+              noValidate
+            >
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700"
+                    htmlFor="name"
+                  >
+                    Name
                   </label>
                   <input
-                    name="photo"
-                    type="file"
-                    accept="image/*"
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    required
+                    {...register("name", { required: "Name is required" })}
+                    type="text"
+                    placeholder="Name"
+                    className="input-style w-full border rounded-md p-2"
+                    id="name"
                   />
-                  <label className="block text-sm font-medium text-gray-700 mt-4">
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.name?.message}
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700"
+                    htmlFor="email"
+                  >
+                    Email
+                  </label>
+                  <input
+                    {...register("email", {
+                      required: { value: true, message: "Email is required" },
+                      pattern: {
+                        value:
+                          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                        message: "Invalid email address",
+                      },
+                    })}
+                    type="email"
+                    id="email"
+                    placeholder="Email"
+                    className="input-style w-full border rounded-md p-2"
+                    disabled={isEditMode}
+                  />
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.email?.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700"
+                    htmlFor="phone"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    {...register("phone", {
+                      required: {
+                        value: true,
+                        message: "Phone number is required",
+                      },
+                      pattern: {
+                        value: /^\d{10}$/,
+                        message: "Phone number must be 10 digits",
+                      },
+                    })}
+                    type="tel"
+                    id="phone"
+                    placeholder="Phone Number"
+                    className="input-style w-full border rounded-md p-2"
+                  />
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.phone?.message}
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700"
+                    htmlFor="position"
+                  >
+                    Position
+                  </label>
+                  <input
+                    {...register("position", {
+                      required: {
+                        value: true,
+                        message: "Position is required",
+                      },
+                    })}
+                    type="text"
+                    placeholder="Position"
+                    id="position"
+                    className="input-style w-full border rounded-md p-2"
+                  />
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.position?.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700"
+                    htmlFor="employmentStatus"
+                  >
+                    Employment Status
+                  </label>
+                  <select
+                    {...register("roleId", {
+                      required: { value: true, message: "Role is required" },
+                    })}
+                    id="roleId"
+                    className="input-style w-full border rounded-md p-2"
+                  >
+                    <option value="">Select Role</option>
+                    {roles.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.roleId?.message}
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700"
+                    htmlFor="departmentId"
+                  >
+                    Department
+                  </label>
+                  <select
+                    {...register("departmentId", {
+                      required: {
+                        value: true,
+                        message: "Department is required",
+                      },
+                    })}
+                    className="input-style w-full border rounded-md p-2"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((d) => (
+                      <option key={d._id} value={d._id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.departmentId?.message}
+                  </p>
+                </div>
+              </div>
+              {isEditMode &&
+                selectedDocuments.filter(
+                  (doc) => !removedDocumentKeys.includes(doc._key)
+                ).length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mt-4">
+                      Existing Documents
+                    </label>
+                    <ul className="mb-2">
+                      {selectedDocuments
+                        .filter(
+                          (doc) => !removedDocumentKeys.includes(doc._key)
+                        )
+                        .map((doc, idx) => (
+                          <li
+                            key={doc._key}
+                            className="flex items-center justify-between mb-1"
+                          >
+                            <a
+                              href={doc.asset.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline hover:text-blue-800 text-sm"
+                            >
+                              Document {idx + 1}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDocument(doc._key)}
+                              className="ml-2 text-xs text-red-600 hover:underline"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+              <div className="grid grid-cols-2 gap-6">
+                {!isEditMode && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Photo
+                    </label>
+                    <input
+                      {...register("photo", {
+                        required: { value: true, message: "Photo is required" },
+                      })}
+                      type="file"
+                      id="photo"
+                      accept="image/*"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.photo?.message}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mt-4"
+                    htmlFor="documents"
+                  >
                     Documents
                   </label>
                   <input
-                    name="documents"
                     type="file"
+                    id="documents"
                     multiple
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    required
+                    {...register("documents")}
                   />
-                </>
-              )}
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                  className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isEditMode ? "Update" : "Create"}
+                  {isEditMode ?  (isSubmitting ? "updating":"Update")  : (isSubmitting ? "creating":"Create")}
                 </button>
               </div>
             </form>

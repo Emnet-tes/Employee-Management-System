@@ -21,7 +21,7 @@ const employee ={
     },
     { name: "name", type: "string", title: "Full Name" },
     { name: "phone", type: "string", title: "Phone Number" },
-    { name: "photo", type: "image", title: "Profile Photo" },
+    { name: "photo", type: "image", title: "Profile Photo" ,options: {hotspot: true}},
     {
       name: "employmentStatus",
       type: "string",

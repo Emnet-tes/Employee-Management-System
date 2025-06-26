@@ -34,8 +34,9 @@ export function getEmployeeColumns({
                 : "/loginImage.png"
             }
             alt="photo"
-            width={40}
-            height={40}
+            width={50}
+            height={50}
+            unoptimized
             className="w-[60px] h-[60px] object-cover rounded-full"
           />
         );
@@ -43,7 +44,7 @@ export function getEmployeeColumns({
     },
     {
       header: "Name",
-      accessorKey: "user.name",
+      accessorKey: "name",
       cell: (info) => (
         <div className="text-center">{String(info.getValue())}</div>
       ),

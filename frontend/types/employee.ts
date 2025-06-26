@@ -46,3 +46,17 @@ export type EmployeeInput = {
   startDate: string;
   documents?: File[];
 };
+
+
+export interface EmployeeFormState {
+  name?: string;
+  email?: string;
+  phone?: string;
+  position?: string;
+  departmentId?: string;
+  roleId?: string;
+  startDate?: string;
+  employmentStatus?: string;
+  documents?: File[];
+}
+

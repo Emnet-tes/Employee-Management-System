@@ -29,6 +29,7 @@ export function buildImageUrl(
   imageAsset: string | { _type: string; asset: { _ref: string } }
 ) {
   const builder = imageUrlBuilder(client);
+  console.log("Building image URL for asset:", builder.image(imageAsset).url());
   return builder.image(imageAsset).url();
 }
 
@@ -42,3 +43,15 @@ export function timeDifference(
   const timeDiff = end.getTime() - start.getTime();
   return timeDiff
 }
+
+export async function uploadToServer(file: File, type: "image" | "file") {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) return alert("Failed to upload file");
+    return await res.json();
+  }
