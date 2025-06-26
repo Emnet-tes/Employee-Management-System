@@ -23,42 +23,42 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-72 bg-white shadow-md p-6 space-y-8">
-        <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-xl font-bold text-blue-600">Employee System</h2>
+      <aside className="w-80 bg-white shadow-md p-6 space-y-8">
+        <div className="flex items-center gap-2 mb-12">
+          <h2 className="text-3xl font-bold text-blue-900">Employee System</h2>
         </div>
 
         <nav className="space-y-2">
           <NavItem
-            icon={<Home size={20} />}
+            icon={<Home size={24} />}
             label="Dashboard"
             href="/dashboard"
           />
           {session?.user?.role !== "employee" && (
             <NavItem
-              icon={<BarChart size={20} />}
+              icon={<BarChart size={24} />}
               label="Employee"
               href="/employees"
             />
           )}
           <NavItem
-            icon={<Calendar size={20} />}
+            icon={<Calendar size={24} />}
             label="Attendance"
             href="/attendance"
           />
-          <NavItem icon={<Calendar size={20} />} label="Leave" href="/leave" />
+          <NavItem icon={<Calendar size={24} />} label="Leave" href="/leave" />
           <NavItem
-            icon={<FileText size={20} />}
+            icon={<FileText size={24} />}
             label="Schedule"
             href="/schedule"
           />
           <NavItem
-            icon={<Briefcase size={20} />}
+            icon={<Briefcase size={24} />}
             label="Performance"
             href="/performance"
           />
           <NavItem
-            icon={<User size={20} />}
+            icon={<User size={24} />}
             label="My Profile"
             href="/profile"
           />
@@ -71,10 +71,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               await signOut({ callbackUrl: "/login" });
               setIsLoggingOut(false);
             }}
-            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed text-xl"
             disabled={isLoggingOut}
           >
-            <LogOut size={20} /> {isLoggingOut ? "Logging out..." : "Logout"}
+            <LogOut size={24} /> {isLoggingOut ? "Logging out..." : "Logout"}
           </button>
         </div>
       </aside>
@@ -117,24 +117,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               onClick={() => (window.location.href = "/profile")}
             >
               <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 12a4 4 0 100-8 4 4 0 000 8z"
-              />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 12a4 4 0 100-8 4 4 0 000 8z"
+                />
               </svg>
             </button>
           </div>
@@ -165,7 +165,7 @@ const NavItem = ({
           ? "bg-blue-100 text-blue-700 font-semibold"
           : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
       }`}
-      style={{ fontSize: "1.05rem" }}
+      style={{ fontSize: "1.4rem" }}
     >
       <span className="flex items-center justify-center w-6 h-6">{icon}</span>
       <span className="ml-2">{label}</span>
