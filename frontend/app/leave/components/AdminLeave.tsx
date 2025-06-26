@@ -1,161 +1,93 @@
 "use client";
 
-
+import { useEffect, useState } from "react";
 import { getAllLeaves } from "@/lib/sanity/utils/leaves";
 import { Leave } from "@/types/leaves";
-import {  useEffect, useMemo, useState } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { getLeaveColumns } from "./LeaveColumns";
-import Table from "@/app/_component/Table";
 import Loading from "@/app/_component/Loading";
-
-
+import LeaveTable from "./LeaveTable";
+import LeaveBalanceChart from "./LeaveBalanceChart";
 
 const TOTAL_LEAVE_DAYS = 20;
-
-const COLORS = ["#8884d8", "#82ca9d"];
 
 const AdminLeave = () => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [usedDays, setUsedDays] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const colums = useMemo(
-    () => getLeaveColumns({
-      showActions: true,
-      onApprove: (leaveId: string) => handleStatusChange(leaveId, "approved"),
-      onReject: (leaveId: string) => handleStatusChange(leaveId, "rejected"),
-    }),
-    []
-  );
-
-  async function fetchLeaves() {
+  const fetchLeaves = async () => {
     setLoading(true);
     try {
-    const response = await getAllLeaves();
-    setLeaves(response);
+      const data = await getAllLeaves();
+      setLeaves(data);
 
-    const approvedLeaves = response.filter(
-      (leave) => leave.status === "approved"
-    );
-    const totalUsed = approvedLeaves.reduce(
-      (acc, leave) => acc + (leave.days || 0),
-      0
-    );
-    setUsedDays(totalUsed);
-  }
-  finally {
-    setLoading(false);
-  }
-  }
-
-  useEffect(() => {
-    fetchLeaves();
-  },[]);
+      const approved = data.filter((leave) => leave.status === "approved");
+      const totalUsed = approved.reduce((acc, l) => acc + (l.days || 0), 0);
+      setUsedDays(totalUsed);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStatusChange = async (
     leaveId: string,
     status: "approved" | "rejected"
   ) => {
+    const leave = leaves.find((l) => l._id === leaveId);
     try {
-      const response = await fetch(`/api/leaves/${leaveId}`, {
+      const res = await fetch(`/api/leaves/${leaveId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
 
-      if (!response.ok) throw new Error("Failed to update leave status");
+      if (!res.ok) throw new Error("Failed to update status");
+
+      if (leave) {
+        await fetch("/api/notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: leave.employee._id,
+            type: "leave_status",
+            message: `Your leave request has been ${status}`,
+          }),
+        });
+      }
 
       alert(`Leave ${status} successfully!`);
       await fetchLeaves();
+
       if (status === "approved") {
-        //  update employee Employement status to "on leave"
-        const data = await response.json();
-        // get employee id from response
-        const employeeId = data.employee._id;
-        const updateResponse = await fetch(`/api/employee/${employeeId}`, {
+        const updated = await res.json();
+        await fetch(`/api/employee/${updated.employee._id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ employmentStatus: "on_leave" }),
         });
-        if (!updateResponse.ok) {
-          throw new Error("Failed to update employee status");
-        }
       }
-    } catch (error) {
-      console.error("Error updating leave status:", error);
-      alert("Failed to update leave status.");
+    } catch (err) {
+      console.error("Failed to update leave:", err);
+      alert("Could not update leave.");
     }
   };
 
-  const leaveBalanceData = [
-    { name: "Used Leave", value: usedDays },
-    {
-      name: "Remaining Leave",
-      value: Math.max(TOTAL_LEAVE_DAYS - usedDays, 0),
-    },
-  ];
-  if (loading) {
-    return <Loading/>
-  }
-  if( leaves.length === 0) {
-    return <div className="text-center text-gray-500 py-4">
-          No leave records found.
-        </div>
-  }
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
+
+  if (loading) return <Loading />;
+
+  if (leaves.length === 0)
+    return <div className="text-center text-gray-500 py-4">No leave data.</div>;
+
   return (
     <div className="text-black space-y-16 min-h-screen p-4 flex flex-col">
-      <div>
-        <h1 className="text-lg font-semibold mb-4">Leave Requests</h1>
-        {/* Leave Table */}
-        <Table
-        columns={colums}
-        data={leaves}
-        />
-        {leaves.length === 0 && (
-          <p className="text-center text-gray-500">No leave requests found.</p>
-        )}
-      </div>
-
-      {/* Pie Chart */}
-      <div className="w-2/5 h-72">
-        <h1 className=" text-lg font-semibold mb-4">
-          Employee Leave Balance
-        </h1>
-        <ResponsiveContainer className="bg-white rounded-md shadow-md p-4">
-          <PieChart>
-            <Pie
-              data={leaveBalanceData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, percent }) =>
-                `${name} ${(percent * 100).toFixed(0)}%`
-              }
-            >
-              {leaveBalanceData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fontSize={14}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+      <LeaveTable
+        leaves={leaves}
+        onApprove={(id) => handleStatusChange(id, "approved")}
+        onReject={(id) => handleStatusChange(id, "rejected")}
+      />
+      <LeaveBalanceChart usedDays={usedDays} totalDays={TOTAL_LEAVE_DAYS} />
     </div>
   );
 };

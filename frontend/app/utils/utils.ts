@@ -29,7 +29,6 @@ export function buildImageUrl(
   imageAsset: string | { _type: string; asset: { _ref: string } }
 ) {
   const builder = imageUrlBuilder(client);
-  console.log("Building image URL for asset:", builder.image(imageAsset).url());
   return builder.image(imageAsset).url();
 }
 

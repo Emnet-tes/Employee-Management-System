@@ -8,6 +8,8 @@ import Loading from "@/app/_component/Loading";
 import { timeDifference } from "@/app/utils/utils";
 import { getLeaveColumns } from "./LeaveColumns";
 import Table from "@/app/_component/Table";
+import { getEmployees } from "@/lib/sanity/utils/employee";
+import { Employee } from "@/types/employee";
 
 export interface LeaveFormValues {
   type: "sick" | "vacation" | "wfh";
@@ -21,6 +23,7 @@ interface Props {
   departmentId: string;
 }
 const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
+  const [manager,setManager] = useState<Employee[] | null>(null);
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,6 +40,7 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
     }
     // Calculate number of days
     const timeDiff = timeDifference(data.startDate, data.endDate);
+    const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
     try {
       const res = await fetch("/api/leaves", {
         method: "POST",
@@ -45,13 +49,34 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
           ...data,
           departmentId: departmentId,
           employeeId: employeeId,
-          days: Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1, // +1 to include both start and end dates
+          days: totalDays, // +1 to include both start and end dates
           status: "pending",
         }),
       });
 
       if (!res.ok) throw new Error(await res.text());
       alert("Leave request submitted!");
+      try{
+        if (manager) {
+          await Promise.all(
+            manager.map(async (mang) => {
+              await fetch("/api/notification", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  recipientId: mang._id,
+                  type: "leave_request",
+                  message: `New leave request from Employee for ${totalDays} days`,
+                }),
+              });
+            })
+          );
+        }
+       
+      }catch(err){console.error("Failed to send notification", err);
+        alert("Failed to send notification to manager.");
+      }
+
       await fetchLeaves();
       setShowModal(false);
       reset();
@@ -86,8 +111,19 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
 
   // Fetch leaves on mount
   useEffect(() => {
-    fetchLeaves();
-  },[]);
+    const fetchData = async () => {
+      await fetchLeaves();
+      const employees: Employee[] = await getEmployees();
+      console
+      const manager = employees.filter(
+        (emp) =>
+          emp.department?._id === departmentId && emp.role.title === "manager"
+      );
+      console.log(manager,"manager");
+      setManager(manager || null);
+    };
+    fetchData();
+  }, []);
 
   // Delete a leave
   // async function handleDelete(id: string) {

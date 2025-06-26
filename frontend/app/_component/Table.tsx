@@ -30,7 +30,7 @@ export default function Table<TData>({ data, columns ,enableFilters}: TableProps
 
 
   return (
-    <div className="overflow-x-auto p-4 bg-white rounded-lg shadow space-y-4">
+    <div className=" text-black overflow-x-auto p-4 bg-white rounded-lg shadow space-y-4">
       {enableFilters && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {table.getAllColumns().map((column) =>

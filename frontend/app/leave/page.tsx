@@ -34,7 +34,7 @@ export default async function LeavesPage() {
       "./components/EmployeeLeave"
     );
     return (
-      <EmployeeLeave employeeId={employeeId} departmentId={departmentId} />
+      <EmployeeLeave employeeId={employeeId} departmentId={departmentId}  />
     );
   } else if (role === "admin") {
     const { default: AdminLeave } = await import("./components/AdminLeave");
