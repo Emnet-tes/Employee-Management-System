@@ -120,7 +120,8 @@ const AdminDashboard = () => {
     async function fetchLeaves() {
       const res = await fetch("/api/leaves");
       const data: Leave[] = await res.json();
-      setLeaveData(data);
+      console.log("Fetched leaves:", data);
+      setLeaveData(Array.isArray(data) ? data : []);
       setLeavesLoaded(true);
     }
     fetchLeaves();

@@ -5,6 +5,9 @@ import Modal from "./Modal";
 import { Employee } from "@/types/employee";
 import Select from "react-select";
 import employee from "@/lib/sanity/schemas/employee";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 type KPI = {
   kpi: string;
   target: number;
@@ -32,6 +35,7 @@ export default function AddReviewModal({
   const [kpis, setKpis] = useState<KPI[]>([
     { kpi: "", target: 0, achieved: 0 },
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   console.log("Employees:", employees);
   const options = employees.map((emp) => ({
     value: emp._id,
@@ -43,7 +47,7 @@ export default function AddReviewModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setIsSubmitting(true);
     const reviewData = {
       employeeId: revieweeId,
       reviewerId: employeeId,
@@ -53,27 +57,38 @@ export default function AddReviewModal({
       goals,
       kpis,
     };
-
     try {
       const res = await fetch("/api/performance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reviewData),
       });
-
       if (res.ok) {
-        onClose();
-        if (onSuccess) onSuccess();
+        toast.success("Review submitted successfully!");
+        setTimeout(() => {
+          onClose();
+          if (onSuccess) onSuccess();
+        }, 1200);
       } else {
-        console.error("Failed to submit review");
+        let errorMsg = "Failed to submit review";
+        try {
+          const data = await res.json();
+          if (data && data.error) errorMsg = data.error;
+        } catch (e) {}
+        toast.error(errorMsg);
+        console.error("Failed to submit review", errorMsg);
       }
     } catch (error) {
+      toast.error("Error submitting review");
       console.error("Error submitting review", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Submit Performance Review">
+      <ToastContainer />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-semibold mb-1">Employee</label>
@@ -202,9 +217,10 @@ export default function AddReviewModal({
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
           >
-            Submit Review
+            {isSubmitting ? "Submitting..." : "Submit Review"}
           </button>
         </div>
       </form>
