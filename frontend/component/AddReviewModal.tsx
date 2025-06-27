@@ -36,6 +36,7 @@ export default function AddReviewModal({
     { kpi: "", target: 0, achieved: 0 },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [kpiError, setKpiError] = useState<string>("");
   console.log("Employees:", employees);
   const options = employees.map((emp) => ({
     value: emp._id,
@@ -47,6 +48,16 @@ export default function AddReviewModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate KPIs: target >= achieved for all
+    for (const kpi of kpis) {
+      if (kpi.achieved > kpi.target) {
+        setKpiError(
+          "Each KPI's target must be greater than or equal to achieved."
+        );
+        return;
+      }
+    }
+    setKpiError("");
     setIsSubmitting(true);
     const reviewData = {
       employeeId: revieweeId,
@@ -103,7 +114,7 @@ export default function AddReviewModal({
         {/* Rating */}
         <input
           type="number"
-          className="w-full border px-3 py-2 rounded"
+          className="w-full border px-3 py-2 rounded text-black"
           min={1}
           max={10}
           value={rating}
@@ -115,7 +126,7 @@ export default function AddReviewModal({
         <div>
           <label className="block font-semibold">Feedback</label>
           <textarea
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border px-3 py-2 rounded text-black"
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             required
@@ -128,7 +139,7 @@ export default function AddReviewModal({
           {goals.map((goal, idx) => (
             <input
               key={idx}
-              className="w-full border px-3 py-2 mb-2 rounded"
+              className="w-full border px-3 py-2 mb-2 rounded text-black"
               value={goal}
               onChange={(e) => {
                 const newGoals = [...goals];
@@ -160,7 +171,7 @@ export default function AddReviewModal({
                   newKpis[idx].kpi = e.target.value;
                   setKpis(newKpis);
                 }}
-                className="border px-2 py-1 rounded"
+                className="border px-2 py-1 rounded text-black"
                 required
               />
               <div className="flex flex-col">
@@ -174,7 +185,7 @@ export default function AddReviewModal({
                     newKpis[idx].target = Number(e.target.value);
                     setKpis(newKpis);
                   }}
-                  className="border px-2 py-1 rounded"
+                  className="border px-2 py-1 rounded text-black"
                   required
                 />
               </div>
@@ -189,12 +200,15 @@ export default function AddReviewModal({
                     newKpis[idx].achieved = Number(e.target.value);
                     setKpis(newKpis);
                   }}
-                  className="border px-2 py-1 rounded"
+                  className="border px-2 py-1 rounded text-black"
                   required
                 />
               </div>
             </div>
           ))}
+          {kpiError && (
+            <div className="text-red-600 text-sm mb-2">{kpiError}</div>
+          )}
           <button
             type="button"
             className="text-sm text-blue-600 mt-1 cursor-pointer"
