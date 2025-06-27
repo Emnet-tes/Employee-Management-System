@@ -23,6 +23,22 @@ const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
     []
   );
 
+  // Refetch reviews
+  const fetchReviews = async () => {
+    if (!session?.user?.employeeId) return;
+    try {
+      const res = await fetch(
+        `/api/performance?reviewerId=${session.user.employeeId}`
+      );
+      const data = await res.json();
+      setReviews(data);
+    } catch (err) {
+      console.error("Failed to load performance data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchEmployees = async () => {
       const employees = await getEmployees();
@@ -44,32 +60,19 @@ const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!session?.user?.employeeId) return;
-      try {
-        const res = await fetch(
-          `/api/performance?reviewerId=${session.user.employeeId}`
-        );
-        const data = await res.json();
-        setReviews(data);
-      } catch (err) {
-        console.error("Failed to load performance data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchReviews();
   }, [session]);
 
   if (loading) return <Loading />;
-
 
   return (
     <div className="p-4 overflow-auto">
       <AddReviewModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          fetchReviews();
+        }}
         employeeId={session.user.employeeId}
         employees={departmentEmployees}
       />

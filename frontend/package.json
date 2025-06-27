@@ -23,6 +23,7 @@
     "react-hook-form": "^7.58.1",
     "react-hot-toast": "^2.5.2",
     "react-select": "^5.10.1",
+    "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",
     "sanity": "^3.92.0"
   },
