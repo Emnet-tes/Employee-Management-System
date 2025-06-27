@@ -41,7 +41,6 @@ const AdminLeave = () => {
       });
 
       if (!res.ok) throw new Error("Failed to update status");
-
       if (leave) {
         await fetch("/api/notification", {
           method: "POST",

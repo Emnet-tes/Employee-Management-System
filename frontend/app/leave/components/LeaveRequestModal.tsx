@@ -39,15 +39,21 @@ const LeaveRequestModal = ({
       Math.ceil(
         timeDifference(data.startDate, data.endDate) / (1000 * 3600 * 24)
       ) + 1;
+    // Validate if managerId and departmentId exist
+    if (!managerId || !departmentId) {
+      alert("Manager or Department ID is missing.");
+      return;
+    }
+
     const res = await fetch("/api/leaves", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...data,
-        departmentId,
-        employeeId: managerId,
-        days: totalDays,
-        status: "pending",
+      ...data,
+      departmentId,
+      employeeId: managerId,
+      days: totalDays,
+      status: "pending",
       }),
     });
 
@@ -75,18 +81,13 @@ const LeaveRequestModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+      <div className="bg-white p-6 rounded shadow-md w-full max-w-md text-black">
         <h2 className="text-xl font-semibold mb-4">Leave Request</h2>
         <form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
-          className="space-y-4"
+          className="space-y-4 "
         >
-          <form
-            noValidate
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
-          >
             <div className="mb-3">
               <label className="block text-sm font-medium " htmlFor="type">
                 Type
@@ -176,7 +177,6 @@ const LeaveRequestModal = ({
               </button>
             </div>
           </form>
-        </form>
       </div>
     </div>
   );
