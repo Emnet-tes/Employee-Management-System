@@ -8,9 +8,10 @@ import {
 // GET: Get a schedule by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const schedule = await getScheduleById(params.id);
+  const id = (await params).id;
+  const schedule = await getScheduleById(id);
   if (!schedule) {
     return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
   }
@@ -20,18 +21,20 @@ export async function GET(
 // PATCH: Update a schedule by ID
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   const updates = await req.json();
-  const updated = await updateSchedule(params.id, updates);
+  const updated = await updateSchedule(id, updates);
   return NextResponse.json(updated);
 }
 
 // DELETE: Delete a schedule by ID
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const deleted = await deleteSchedule(params.id);
+  const id = (await params).id;
+  const deleted = await deleteSchedule(id);
   return NextResponse.json(deleted);
 }
