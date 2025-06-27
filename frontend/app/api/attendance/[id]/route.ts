@@ -1,6 +1,4 @@
-import {
-  updateAttendance,
-} from "@/lib/sanity/utils/attendance";
+import { updateAttendance } from "@/lib/sanity/utils/attendance";
 import { NextRequest, NextResponse } from "next/server";
 
 // DELETE /api/attendance/[id]
@@ -17,15 +15,10 @@ import { NextRequest, NextResponse } from "next/server";
 // PATCH /api/attendance/[id]
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<NextResponse> {
-  try {
-    const data = await req.json();
-    const updated = await updateAttendance(params.id, data);
-    return NextResponse.json(updated);
-  } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Unknown error occurred";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const id = (await params).id;
+  const data = await req.json();
+  const updated = await updateAttendance(id, data);
+  return NextResponse.json(updated);
 }
