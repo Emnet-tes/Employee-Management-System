@@ -4,19 +4,21 @@ import { NextRequest, NextResponse } from "next/server";
 // GET: Get employee by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const employee = await getUserById(params.id);
-  if (!employee) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = (await params).id;
+  const employee = await getUserById(id);
+  if (!employee)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(employee);
 }
 
 // PATCH: Update employee by ID
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = await params.id;
+  const id = (await params).id;
   const updates = await req.json();
   const updated = await updateUser(id, updates);
   return NextResponse.json(updated);
@@ -24,8 +26,9 @@ export async function PATCH(
 // DELETE: Delete employee by ID
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const deleted = await deleteUser(params.id);
+  const id = (await params).id;
+  const deleted = await deleteUser(id);
   return NextResponse.json(deleted);
 }
