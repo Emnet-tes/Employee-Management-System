@@ -1,6 +1,5 @@
 import React from 'react'
 import UserCard from '../_component/UserCard'
-import InformationCard from '../_component/InformationCard'
 
 import { auth } from '@/lib/auth'
 import { getEmployeesByUserId } from '@/lib/sanity/utils/employee'
@@ -20,7 +19,6 @@ const page = async() => {
     <div>
         <ProfileCard id={user.id}/>
         <UserCard {...employee} />
-        <InformationCard/>
     </div>
   )
 }

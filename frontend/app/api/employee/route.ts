@@ -9,7 +9,6 @@ export async function GET() {
 
 // POST: Create a new employee
 export async function POST(req: NextRequest) {
-  console.log("Creating new employee");
   const data = await req.json();
   const employee = await createEmployee(data);
   return NextResponse.json(employee);

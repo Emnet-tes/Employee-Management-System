@@ -46,7 +46,6 @@ export default function ManagerEmployeesPage({ id }: { id: string }) {
         (e:Employee) =>
           e.department?._id === managerDept 
       );
-      console.log("Filtered Employees:", filtered);
       setEmployees(filtered);
       setLoading(false);
     }

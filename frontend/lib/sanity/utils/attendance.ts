@@ -93,7 +93,6 @@ export async function getAttendancesByEmployeeId(
 export async function createAttendance(
   attendance: AttendanceInput
 ): Promise<Attendance | null> {
-  console.log("token", process.env.SANITY_API_TOKEN)
   const newDoc = await client.create({
     _type: "attendance",
     employee: { _type: "reference", _ref: attendance.employeeId },
