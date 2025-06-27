@@ -41,6 +41,6 @@ export default async function LeavesPage() {
     return <AdminLeave />;
   } else {
     const { default: ManagerLeave } = await import("./components/ManagerLeave");
-    return <ManagerLeave managerId={id} departmentId={departmentId} />;
+    return <ManagerLeave managerId={employeeId} departmentId={departmentId} />;
   }
 }

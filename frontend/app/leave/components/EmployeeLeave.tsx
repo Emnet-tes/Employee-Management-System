@@ -38,20 +38,26 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
       alert("End date cannot be before start date");
       return;
     }
+    // Validate employeeId and departmentId
+    if (!employeeId || !departmentId) {
+      alert("Employee or Department not found. Please contact admin.");
+      return;
+    }
+    
     // Calculate number of days
     const timeDiff = timeDifference(data.startDate, data.endDate);
     const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
     try {
       const res = await fetch("/api/leaves", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          departmentId: departmentId,
-          employeeId: employeeId,
-          days: totalDays, // +1 to include both start and end dates
-          status: "pending",
-        }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...data,
+        departmentId: departmentId,
+        employeeId: employeeId,
+        days: totalDays, // +1 to include both start and end dates
+        status: "pending",
+      }),
       });
 
       if (!res.ok) throw new Error(await res.text());
