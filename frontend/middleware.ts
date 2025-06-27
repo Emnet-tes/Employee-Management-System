@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get(sessionCookieName)?.value;
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ["/", "/login"];
+  const publicPaths = ["/", "/login" , "/loginImage.png"];
  
   if (pathname === "/api/login") {
     return NextResponse.next();
