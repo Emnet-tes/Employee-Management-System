@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Modal from "./Modal";
 import { Employee } from "@/types/employee";
 import Select from "react-select";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AssignScheduleModal({
   isOpen,
@@ -22,6 +24,7 @@ export default function AssignScheduleModal({
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const options = employees.map((emp) => ({
     value: emp._id,
@@ -32,7 +35,7 @@ export default function AssignScheduleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setIsSubmitting(true);
     const scheduleData = {
       employeeId,
       date,
@@ -50,21 +53,31 @@ export default function AssignScheduleModal({
       });
 
       if (res.ok) {
-        onClose();
-        if (onSuccess) onSuccess();
+        toast.success("Schedule assigned successfully!");
+        setTimeout(() => {
+          onClose();
+          if (onSuccess) onSuccess();
+        }, 1200); // Wait for toast to show before closing
       } else {
+        toast.error("Failed to assign schedule");
         console.error("Failed to assign schedule");
       }
     } catch (error) {
+      toast.error("Error assigning schedule");
       console.error("Error assigning schedule", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Assign Work Schedule">
+      <ToastContainer />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block font-semibold mb-1 text-black">Employee</label>
+          <label className="block font-semibold mb-1 text-black">
+            Employee
+          </label>
           <Select
             options={options}
             value={selectedOption}
@@ -149,9 +162,10 @@ export default function AssignScheduleModal({
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
           >
-            Assign Schedule
+            {isSubmitting ? "Assigning..." : "Assign Schedule"}
           </button>
         </div>
       </form>
