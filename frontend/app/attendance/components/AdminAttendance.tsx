@@ -61,7 +61,6 @@ export default function AdminAttendance() {
       setLoading(true);
       try {
         const attendanceData = await getAttendances();
-        console.log("attendanceData", attendanceData);
         setAttendances(attendanceData || []);
       } catch (error) {
         console.error("Error fetching admin data:", error);

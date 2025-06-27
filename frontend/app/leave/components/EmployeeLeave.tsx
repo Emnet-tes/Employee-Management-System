@@ -105,7 +105,6 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
       setLeaves([]);
     } finally {
       setLoading(false);
-      console.log("Leaves fetched:", loading);
     }
   }
 

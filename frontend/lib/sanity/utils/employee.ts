@@ -55,7 +55,6 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
   }`;
 
   const employee = await client.fetch(query, { id });
-  console.log("Fetched employee:", employee);
   return employee || null;
 }
 
@@ -86,7 +85,6 @@ export async function getEmployeesByUserId(id: string): Promise<Employee> {
 export async function createEmployee(
   employee: EmployeeInput
 ): Promise<Employee> {
-  console.log("Creating employee with data: 1", employee);
   const newDoc = await client.create({
     _type: "employee",
     user: { _type: "reference", _ref: employee.userId },
