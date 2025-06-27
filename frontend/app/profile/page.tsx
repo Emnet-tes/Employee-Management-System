@@ -1,9 +1,10 @@
 import React from 'react'
 import UserCard from '../_component/UserCard'
 import InformationCard from '../_component/InformationCard'
-import ProfileCard from '../_component/ProfileCard'
+
 import { auth } from '@/lib/auth'
 import { getEmployeesByUserId } from '@/lib/sanity/utils/employee'
+import ProfileCard from './components/ProfileCard'
 
 const page = async() => {
   const session = await auth();

@@ -1,4 +1,5 @@
 import { deleteUser, getUserById, updateUser } from "@/lib/sanity/utils/user";
+import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET: Get employee by ID
@@ -21,7 +22,6 @@ export async function PATCH(
   const updated = await updateUser(id, updates);
   return NextResponse.json(updated);
 }
-
 // DELETE: Delete employee by ID
 export async function DELETE(
   req: NextRequest,

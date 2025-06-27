@@ -71,7 +71,8 @@ export async function getUserById(id: string): Promise<User> {
     role->{
       _id,
       name
-    }
+    },
+    password,
   }`;
 
   return await client.fetch(query, { id });
@@ -89,7 +90,6 @@ export async function updateUser(
 ): Promise<User> {
   const patch: Record<string, unknown> = {};
 
-  // Check for duplicate email
   if (updates.email) {
     const existingUser = await client.fetch(
       `*[_type == "user" && email == $email && _id != $id][0]`,
@@ -101,7 +101,6 @@ export async function updateUser(
     patch.email = updates.email;
   }
 
-  // Check for duplicate name
   if (updates.name) {
     const existingUser = await client.fetch(
       `*[_type == "user" && name == $name && _id != $id][0]`,
@@ -117,10 +116,14 @@ export async function updateUser(
     patch.role = { _type: "reference", _ref: updates.roleId };
   }
 
-  await client.patch(id).set(patch).commit();
+  if (updates.password) {
+    patch.password = updates.password; // this is now a hashed password
+  }
 
+  await client.patch(id).set(patch).commit();
   return await getUserById(id);
 }
+
 
 // Delete user
 export async function deleteUser(id: string): Promise<{ _id: string }> {
