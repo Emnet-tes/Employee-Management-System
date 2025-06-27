@@ -70,7 +70,7 @@ export default function ManagerAttendance({ managerId }: Props) {
         );
         const managerDepartment = managerRecord?.department._id;
         const filteredByDept = allAttendances.filter((attendance) => 
-         attendance.employee.department?._id == managerDepartment );
+         attendance.employee.department?._id == managerDepartment && attendance.employee._id  !== managerRecord._id );
         setAttendances(filteredByDept);
       } catch (error) {
         console.error("Error fetching manager data:", error);

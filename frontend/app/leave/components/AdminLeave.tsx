@@ -6,6 +6,7 @@ import { Leave } from "@/types/leaves";
 import Loading from "@/app/_component/Loading";
 import LeaveTable from "./LeaveTable";
 import LeaveBalanceChart from "./LeaveBalanceChart";
+import toast from "react-hot-toast";
 
 const TOTAL_LEAVE_DAYS = 20;
 
@@ -40,7 +41,11 @@ const AdminLeave = () => {
         body: JSON.stringify({ status }),
       });
 
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!res.ok) {
+        toast.error("Failed to update status");
+        return;
+      }
+
       if (leave) {
         await fetch("/api/notification", {
           method: "POST",
@@ -53,7 +58,7 @@ const AdminLeave = () => {
         });
       }
 
-      alert(`Leave ${status} successfully!`);
+      toast.success(`Leave ${status} successfully!`);
       await fetchLeaves();
 
       if (status === "approved") {
@@ -66,7 +71,7 @@ const AdminLeave = () => {
       }
     } catch (err) {
       console.error("Failed to update leave:", err);
-      alert("Could not update leave.");
+      toast.error("Could not update leave.");
     }
   };
 

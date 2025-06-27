@@ -8,6 +8,7 @@ import { getAttendancesByEmployeeId } from "@/lib/sanity/utils/attendance";
 import Loading from "@/app/_component/Loading";
 import { getAttendanceColumns } from "./AttendanceColums";
 import Table from "@/app/_component/Table";
+import toast from "react-hot-toast";
 
 interface Props {
   userId: string;
@@ -58,11 +59,6 @@ export default function EmployeeAttendance({ userId }: Props) {
     const time = now.toTimeString().slice(0, 5);
     const checkIn = `${date} ${time}`;
 
-    if (todayAttendance) {
-      alert("You already checked in today");
-      return;
-    }
-
     setSubmitting(true);
     try {
       const res = await fetch("/api/attendance", {
@@ -78,11 +74,12 @@ export default function EmployeeAttendance({ userId }: Props) {
       });
 
       if (!res.ok) throw new Error(await res.text());
+      toast.success("Checked in successfully!");
 
       await refreshAttendance();
     } catch (err) {
       console.error("Check-in error:", err);
-      alert("Failed to check in.");
+      toast.error("Failed to check in.");
     } finally {
       setSubmitting(false);
     }
@@ -90,11 +87,11 @@ export default function EmployeeAttendance({ userId }: Props) {
 
   async function handleCheckOut() {
     if (!todayAttendance) {
-      alert("Please check in first.");
+      toast.error("Please check in first.");
       return;
     }
     if (todayAttendance.checkOut) {
-      alert("Already checked out.");
+      toast.error("Already checked out.");
       return;
     }
 
@@ -118,6 +115,7 @@ export default function EmployeeAttendance({ userId }: Props) {
       });
 
       if (!res.ok) throw new Error(await res.text());
+      toast.success("Checked out successfully!");
       const employee = await getEmployeeById(employeeId);
       if(employee?.employmentStatus === "on_leave") {
       try{
@@ -128,12 +126,12 @@ export default function EmployeeAttendance({ userId }: Props) {
         });
       }catch(err) {
         console.error("Failed to update employee status", err);
-        alert("Failed to update employee status.");}
+        toast.error("Failed to update employee status.");}
       }
       await refreshAttendance();
     } catch (err) {
       console.error("Check-out error:", err);
-      alert("Failed to check out.");
+      toast.error("Failed to check out.");
     } finally {
       setSubmitting(false);
     }
@@ -191,7 +189,7 @@ export default function EmployeeAttendance({ userId }: Props) {
                 : "Check In"}
           </button>
           <button
-            className={`px-4 py-2 rounded not-disabled:cursor-pointer ${!todayAttendance?.checkIn || todayAttendance?.checkOut ? "bg-gray-300 text-gray-500" : "bg-blue-600 text-white"}`}
+            className={`${todayAttendance?.checkIn ? "block":"hidden"} px-4 py-2 rounded not-disabled:cursor-pointer ${!todayAttendance?.checkIn || todayAttendance?.checkOut ? "bg-gray-300 text-gray-500" : "bg-blue-600 text-white"}`}
             onClick={handleCheckOut}
             disabled={
               !todayAttendance?.checkIn ||

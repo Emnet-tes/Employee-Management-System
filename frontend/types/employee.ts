@@ -29,8 +29,8 @@ export type Employee = {
     asset: {
       _id: string;
       url: string;
-      _ref: string;
     };
+    assetRef: string;
   }[];
 };
 
@@ -49,14 +49,15 @@ export type EmployeeInput = {
 
 
 export interface EmployeeFormState {
-  name?: string;
-  email?: string;
-  phone?: string;
-  position?: string;
-  departmentId?: string;
-  roleId?: string;
+  name: string;
+  email: string;
+  phone: string;
+  position: string;
+  departmentId: string;
+  roleId: string;
   startDate?: string;
   employmentStatus?: string;
-  documents?: File[];
+  photo?: FileList;
+  documents?: FileList;
 }
 

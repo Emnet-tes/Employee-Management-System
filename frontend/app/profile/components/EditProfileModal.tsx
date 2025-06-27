@@ -1,13 +1,14 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Eye, X } from "lucide-react";
+import { X } from "lucide-react";
 import bcrypt from "bcryptjs";
 import Image from "next/image";
 import { useState } from "react";
 import { Employee } from "@/types/employee";
 import { User } from "@/types/user";
 import { buildImageUrl } from "@/app/utils/utils";
+import toast from "react-hot-toast";
 
 
 interface Props {
@@ -32,7 +33,6 @@ const EditProfileModal = ({ user, employee, onClose ,refresh}: Props) => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -41,12 +41,11 @@ const EditProfileModal = ({ user, employee, onClose ,refresh}: Props) => {
     },
   });
 
-  const photo = watch("photo");
 
   const onSubmit = async (data: FormValues) => {
     try {
       setSaving(true);
-      const updates: Record<string, any> = {
+      const updates: { name: string; email: string; password?: string } = {
         name: data.name,
         email: data.email,
       };
@@ -64,7 +63,7 @@ const EditProfileModal = ({ user, employee, onClose ,refresh}: Props) => {
         });
 
         if (!verifyRes.ok) {
-          alert("Current password is incorrect.");
+          toast.error("Current password is incorrect.");
           return;
         }
         
@@ -103,13 +102,13 @@ const EditProfileModal = ({ user, employee, onClose ,refresh}: Props) => {
         });
       }
 
-      alert("Profile updated!");
+      toast.success("Profile updated!");
       refresh?.(); 
       onClose();
       
     } catch (err) {
       console.error("Save failed", err);
-      alert("Failed to save profile changes.");
+      toast.error("Failed to save profile changes.");
     } finally {
       setSaving(false);
     }

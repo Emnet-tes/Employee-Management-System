@@ -21,10 +21,12 @@ export async function getEmployees(): Promise<Employee[]> {
         name,
         email
       },
-      "documents": documents[]{
-      _key,
-      asset->{ _id, url ,_ref},
-      }
+     "documents": documents[]{
+       _key,
+    "assetRef": asset._ref,
+      asset->{_id, url}
+}
+
     }`
   );
 }

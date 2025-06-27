@@ -10,6 +10,7 @@ import { getLeaveColumns } from "./LeaveColumns";
 import Table from "@/app/_component/Table";
 import { getEmployees } from "@/lib/sanity/utils/employee";
 import { Employee } from "@/types/employee";
+import toast from "react-hot-toast";
 
 export interface LeaveFormValues {
   type: "sick" | "vacation" | "wfh";
@@ -23,11 +24,10 @@ interface Props {
   departmentId: string;
 }
 const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
-  const [manager,setManager] = useState<Employee[] | null>(null);
+  const [manager, setManager] = useState<Employee[] | null>(null);
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
-
 
   const form = useForm<LeaveFormValues>();
   const { register, handleSubmit, reset, formState } = form;
@@ -35,34 +35,37 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
 
   async function onSubmit(data: LeaveFormValues) {
     if (data.endDate < data.startDate) {
-      alert("End date cannot be before start date");
+      toast.error("End date cannot be before start date");
       return;
     }
     // Validate employeeId and departmentId
     if (!employeeId || !departmentId) {
-      alert("Employee or Department not found. Please contact admin.");
+      toast.error("Employee or Department not found. Please contact admin.");
       return;
     }
-    
+
     // Calculate number of days
     const timeDiff = timeDifference(data.startDate, data.endDate);
     const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
     try {
       const res = await fetch("/api/leaves", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...data,
-        departmentId: departmentId,
-        employeeId: employeeId,
-        days: totalDays, // +1 to include both start and end dates
-        status: "pending",
-      }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          departmentId: departmentId,
+          employeeId: employeeId,
+          days: totalDays, // +1 to include both start and end dates
+          status: "pending",
+        }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
-      alert("Leave request submitted!");
-      try{
+      if (!res.ok) {
+        toast.error("Failed to submit leave request");
+        return;
+      }
+      toast.success("Leave request submitted!");
+      try {
         if (manager) {
           await Promise.all(
             manager.map(async (mang) => {
@@ -78,9 +81,9 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
             })
           );
         }
-       
-      }catch(err){console.error("Failed to send notification", err);
-        alert("Failed to send notification to manager.");
+      } catch (err) {
+        console.error("Failed to send notification", err);
+        toast.error("Failed to send notification to manager.");
       }
 
       await fetchLeaves();
@@ -88,7 +91,7 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
       reset();
     } catch (err) {
       console.error("Leave request failed:", err);
-      alert("Failed to submit leave request.");
+      toast.error("Failed to submit leave request.");
     }
   }
 
@@ -101,19 +104,18 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
       console.error("Failed to fetch leaves", err);
       setLeaves([]);
     } finally {
-      setLoading(false); 
+      setLoading(false);
       console.log("Leaves fetched:", loading);
     }
   }
-  
 
-    const columns = useMemo(
-      () =>
-        getLeaveColumns({
-          showActions: false
-        }),
-      []
-    );
+  const columns = useMemo(
+    () =>
+      getLeaveColumns({
+        showActions: false,
+      }),
+    []
+  );
 
   // Fetch leaves on mount
   useEffect(() => {
@@ -144,11 +146,11 @@ const EmployeeLeave = ({ employeeId, departmentId }: Props) => {
         </div>
       ) : (
         <div className="">
-        <h1 className=" text-lg font-semibold mb-4">
-          Employee Leaves Requests
-        </h1>
-        <Table data={leaves} columns={columns} />
-      </div>
+          <h1 className=" text-lg font-semibold mb-4">
+            Employee Leaves Requests
+          </h1>
+          <Table data={leaves} columns={columns} />
+        </div>
       )}
 
       <button

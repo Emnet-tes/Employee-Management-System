@@ -11,7 +11,7 @@ export default function AdminEmployeesPage() {
 
   return (
     <div className="container mx-auto p-4 text-black">
-      <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
+      <h1 className="text-2xl font-bold mb-6">Employee Management (Admin)</h1>
       {/* Tabs */}
       <div className="flex mb-6  border-b border-gray-400 w-fit">
         <button

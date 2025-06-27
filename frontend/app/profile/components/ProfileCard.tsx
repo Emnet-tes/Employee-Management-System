@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { Pencil } from "lucide-react";
 import Image from "next/image";
 import { getEmployeesByUserId } from "@/lib/sanity/utils/employee";

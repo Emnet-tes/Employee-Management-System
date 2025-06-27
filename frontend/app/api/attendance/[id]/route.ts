@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const data = await req.json();
     const updated = await updateAttendance(params.id, data);

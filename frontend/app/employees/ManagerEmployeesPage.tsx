@@ -59,10 +59,12 @@ export default function ManagerEmployeesPage({ id }: { id: string }) {
 
   return (
     <div className="container mx-auto p-6 text-black">
-      <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
-      { employees.length === 0 ? (
-        <p className="text-gray-500">No employees found in your department.</p>):<Table data={employees} columns={columns} />}
-      
+      <h1 className="text-2xl font-bold mb-6">Employee Management (Manager)</h1>
+      {employees.length === 0 ? (
+        <p className="text-gray-500">No employees found in your department.</p>
+      ) : (
+        <Table data={employees} columns={columns} />
+      )}
     </div>
   );
 }

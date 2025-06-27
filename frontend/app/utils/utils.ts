@@ -51,6 +51,6 @@ export async function uploadToServer(file: File, type: "image" | "file") {
       method: "POST",
       body: formData,
     });
-    if (!res.ok) return alert("Failed to upload file");
+    if (!res.ok) return console.error("Failed to upload file");
     return await res.json();
   }

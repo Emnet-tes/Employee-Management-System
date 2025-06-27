@@ -41,7 +41,7 @@ export default function Table<TData>({ data, columns ,enableFilters}: TableProps
                 </label>
                 <input
                   type="text"
-                  placeholder={`Filter ${column.id}`}
+                  placeholder={`Filter ${column.columnDef.header}`}
                   value={(column.getFilterValue() ?? "") as string}
                   onChange={(e) => column.setFilterValue(e.target.value)}
                   className="w-full border px-2 py-1 rounded text-sm"

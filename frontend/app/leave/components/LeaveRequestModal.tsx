@@ -5,6 +5,7 @@ import { LeaveFormValues } from "./EmployeeLeave";
 import { timeDifference } from "@/app/utils/utils";
 import { Employee } from "@/types/employee";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 interface Props {
   managerId: string;
@@ -31,7 +32,7 @@ const LeaveRequestModal = ({
   const onSubmit = async (data: LeaveFormValues) => {
     const currentDate = new Date().toISOString().split("T")[0];
     if (data.startDate < currentDate || data.endDate < data.startDate) {
-      alert("Invalid dates");
+      toast.error("Invalid dates");
       return;
     }
 
@@ -41,7 +42,7 @@ const LeaveRequestModal = ({
       ) + 1;
     // Validate if managerId and departmentId exist
     if (!managerId || !departmentId) {
-      alert("Manager or Department ID is missing.");
+      toast.error("Manager or Department ID is missing.");
       return;
     }
 
@@ -57,7 +58,9 @@ const LeaveRequestModal = ({
       }),
     });
 
-    if (!res.ok) return alert("Failed to submit leave");
+    if (!res.ok) { toast.error("Failed to submit leave")
+      
+      return;}
 
     await Promise.all(
       adminList.map((admin) =>
@@ -73,7 +76,7 @@ const LeaveRequestModal = ({
       )
     );
 
-    alert("Leave request submitted!");
+    toast.success("Leave request submitted!");
     onClose();
     onSubmitted();
     reset();
