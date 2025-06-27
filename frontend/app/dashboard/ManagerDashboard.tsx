@@ -46,7 +46,6 @@ const ManagerDashboard: React.FC<Props> = ({ session }) => {
     []
   );
   const [leaveData, setLeaveData] = useState<Leave[]>([]);
-  const [loading, setLoading] = useState(true);
   const [attendanceLoaded, setAttendanceLoaded] = useState(false);
   const [leavesLoaded, setLeavesLoaded] = useState(false);
   const [performanceLoaded, setPerformanceLoaded] = useState(false);
