@@ -35,28 +35,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#f4f4f4]">
-      <div className="bg-white flex rounded-xl shadow-lg overflow-hidden w-[900px]">
+    <div className="flex justify-center items-center min-h-screen bg-[#f4f4f4] px-4">
+      <div className="bg-white flex flex-col md:flex-row rounded-xl shadow-lg overflow-hidden max-w-[900px] w-full">
         {/* Left - Illustration */}
-        <div className="bg-[#f9f9f9] p-10 w-1/2 flex items-center justify-center">
+        <div className="bg-[#f9f9f9] p-6 md:p-10 w-full md:w-1/2 flex items-center justify-center">
           <Image
             src="/loginImage.png"
             alt="Login Illustration"
-            width={300}
-            height={300}
+            width={250}
+            height={250}
+            className="w-[200px] md:w-[250px] lg:w-[300px] h-auto"
           />
         </div>
 
         {/* Right - Form */}
-        <div className="w-1/2 p-10 flex flex-col justify-center">
+        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-center">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-black">Welcome Back</h2>
-            {/* <span className="text-sm text-black">
-              New User?{" "}
-              <a href="/signup" className="text-blue-500 hover:underline">
-                Sign Up
-              </a>
-            </span> */}
+            <h2 className="text-xl md:text-2xl font-semibold text-black">
+              Welcome Back
+            </h2>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
@@ -94,10 +91,10 @@ export default function LoginPage() {
 
             {error && <div className="text-red-500 text-sm">{error}</div>}
 
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-center text-sm gap-4 sm:gap-0">
               <button
                 type="submit"
-                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Logging in..." : "Login →"}

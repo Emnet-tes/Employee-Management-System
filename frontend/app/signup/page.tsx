@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Clear previous error
+    setError("");
 
     if (password !== confirm) {
       setError("Passwords do not match");
@@ -23,7 +24,7 @@ export default function SignupPage() {
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password , name }),
+      body: JSON.stringify({ email, password, name }),
     });
 
     if (!res.ok) {
@@ -35,22 +36,25 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#f4f4f4]">
-      <div className="bg-white flex rounded-xl shadow-lg overflow-hidden w-[900px]">
+    <div className="flex justify-center items-center min-h-screen bg-[#f4f4f4] px-4">
+      <div className="bg-white flex flex-col md:flex-row rounded-xl shadow-lg overflow-hidden max-w-[900px] w-full">
         {/* Left - Illustration */}
-        <div className="bg-[#f9f9f9] p-10 w-1/2 flex items-center justify-center">
+        <div className="bg-[#f9f9f9] p-6 md:p-10 w-full md:w-1/2 flex items-center justify-center">
           <Image
             src="/loginImage.png"
             alt="Signup Illustration"
-            width={300}
-            height={300}
+            width={250}
+            height={250}
+            className="w-[200px] md:w-[250px] lg:w-[300px] h-auto"
           />
         </div>
 
         {/* Right - Signup Form */}
-        <div className="w-1/2 p-10 flex flex-col justify-center">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Welcome Back</h2>
+        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-center">
+          <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-2 mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+              Create Account
+            </h2>
             <span className="text-sm text-gray-600">
               Already have an account?{" "}
               <a href="/login" className="text-blue-500 hover:underline">
@@ -59,7 +63,7 @@ export default function SignupPage() {
             </span>
           </div>
 
-          <form onSubmit={handleSignup} className="space-y-5">
+          <form onSubmit={handleSignup} className="space-y-4 md:space-y-5">
             <div>
               <label className="text-gray-600 text-sm">Full Name</label>
               <input
@@ -104,15 +108,13 @@ export default function SignupPage() {
               />
             </div>
 
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
-            )}
+            {error && <div className="text-red-500 text-sm">{error}</div>}
 
             <button
               type="submit"
               className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition w-full cursor-pointer"
             >
-              SignUp →
+              Sign Up →
             </button>
           </form>
         </div>
