@@ -134,10 +134,9 @@ const DepartmentTab = () => {
       {loading ? (
         <Loading />
       ) : (
-        <div className="p-4  w-3/4 rounded-md  bg-white shadow ">
-         
-          <table className="text-left w-full border">
-            <thead className="bg-gray-200 ">
+        <div className="w-full rounded-md bg-white shadow overflow-x-auto">
+          <table className="min-w-[600px] text-left w-full border">
+            <thead className="bg-gray-200">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -153,9 +152,9 @@ const DepartmentTab = () => {
             </thead>
             <tbody>
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b hover:bg-gray-50 ">
+                <tr key={row.id} className="border-b hover:bg-gray-50">
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-2 ">
+                    <td key={cell.id} className="px-4 py-2">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
