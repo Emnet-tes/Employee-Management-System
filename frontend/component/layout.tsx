@@ -92,7 +92,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         } md:translate-x-0`}
       >
         <div className="flex justify-between items-center mb-6 md:mb-12">
-          <h2 className="md:text-2xl text-lg font-bold text-blue-900">Employee System</h2>
+          <h2 className="text-lg md:text-2xl  font-bold text-blue-900">
+            Employee System
+          </h2>
           <button
             className="md:hidden p-1 rounded hover:bg-gray-200"
             onClick={() => setMobileMenuOpen(false)}
@@ -210,9 +212,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               {showNotifications && (
                 <div
                   ref={notifRef}
-                  className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                  className="absolute right-0 mt-2 md:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 w-52"
                 >
-                  <div className="p-4 border-b font-semibold text-gray-700 flex justify-between items-center">
+                  <div className="sm:text-base p-4 border-b font-semibold text-gray-700 flex justify-between items-center">
                     Notifications
                     <button
                       className="text-xs text-blue-600 hover:underline"

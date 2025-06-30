@@ -183,166 +183,122 @@ const AdminDashboard = () => {
   if (!allLoaded) return <Loading />;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 ">
-      <Card className="shadow-lg transition-transform transform hover:scale-105">
-        <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">
-            Total Employees
-          </h3>
-          <strong className="text-2xl text-gray-900">
-            {employeeStats.total}
-          </strong>
-        </div>
-      </Card>
-      <Card className="shadow-lg transition-transform transform hover:scale-105">
-        <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">
-            Active Employees
-          </h3>
-          <strong className="text-2xl text-gray-900">
-            {employeeStats.active}
-          </strong>
-        </div>
-      </Card>
-      <Card className="shadow-lg transition-transform transform hover:scale-105">
-        <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">On Leave</h3>
-          <strong className="text-2xl text-gray-900">
-            {employeeStats.onLeave}
-          </strong>
-        </div>
-      </Card>
-      <Card className="shadow-lg transition-transform transform hover:scale-105">
-        <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">
-            Total Departments
-          </h3>
-          <strong className="text-2xl text-gray-900">
-            {departmentStats.totalDepartments}
-          </strong>
-        </div>
-      </Card>
-      <Card className="shadow-lg transition-transform transform hover:scale-105">
-        <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">
-            Total Managers
-          </h3>
-          <strong className="text-2xl text-gray-900">
-            {departmentStats.totalManagers}
-          </strong>
-        </div>
-      </Card>
-
-      <Card className="col-span-2 shadow-lg transition-transform transform hover:scale-103">
+    <div className="grid grid-cols-1  lg:grid-cols-3 gap-6 p-4 sm:p-6">
+      {/* Employee Stats */}
+      {[["Total Employees", employeeStats.total],
+        ["Active Employees", employeeStats.active],
+        ["On Leave", employeeStats.onLeave],
+        ["Total Departments", departmentStats.totalDepartments],
+        ["Total Managers", departmentStats.totalManagers],
+      ].map(([title, value]) => (
+        <Card key={title} className="shadow-lg transition-transform transform hover:scale-[1.02]">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+            <strong className="text-2xl text-gray-900 block mt-1">{value}</strong>
+          </div>
+        </Card>
+      ))}
+  
+      {/* Attendance Chart */}
+      <Card className="col-span-1 sm:col-span-2 shadow-lg transition-transform transform hover:scale-[1.02]">
         <CardContent>
           <h2 className="text-lg font-bold mb-4 text-gray-800">
             Attendance Performances
           </h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={attendanceData}>
-              <XAxis dataKey="name" tick={{ fill: "gray" }} />
-              <YAxis tick={{ fill: "gray" }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #ccc",
-                }}
-              />
-              <Bar dataKey="Present" fill="#4ade80" />
-              <Bar dataKey="Absent" fill="#f87171" />
-              <Bar dataKey="on leave" fill="#a3a3a3" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="w-full h-64 sm:h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={attendanceData}>
+                <XAxis dataKey="name" tick={{ fill: "gray" }} />
+                <YAxis tick={{ fill: "gray" }} />
+                <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc" }} />
+                <Bar dataKey="Present" fill="#4ade80" />
+                <Bar dataKey="Absent" fill="#f87171" />
+                <Bar dataKey="on leave" fill="#a3a3a3" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
-      <div className=" flex-1 bg-white rounded-lg shadow p-6 flex flex-col  transform hover:scale-105 transition-transform">
+  
+      {/* Leave Pie Chart */}
+      <div className="col-span-1 bg-white rounded-lg shadow p-4 sm:p-6 flex flex-col transition-transform transform hover:scale-[1.02]">
         <h2 className="text-lg font-bold mb-4 text-gray-800">
-          Employees Leave request Overview
+          Employees Leave Request Overview
         </h2>
-        <div className="flex gap-2 mb-4">
-          <button
-            className={`px-4 py-2 rounded ${
-              pieMode === "type"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-black"
-            }`}
-            onClick={() => setPieMode("type")}
-          >
-            By Type
-          </button>
-          <button
-            className={`px-4 py-2 rounded ${
-              pieMode === "status"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-black"
-            }`}
-            onClick={() => setPieMode("status")}
-          >
-            By Status
-          </button>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {["type", "status"].map((mode) => (
+            <button
+              key={mode}
+              className={`px-4 py-2 rounded text-sm ${
+                pieMode === mode ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+              }`}
+              onClick={() => setPieMode(mode as "type" | "status")}
+            >
+              {mode === "type" ? "By Type" : "By Status"}
+            </button>
+          ))}
         </div>
-        <PieChart
-          width={320}
-          height={320}
-          className="flex flex-col items-center"
-        >
-          <Pie
-            data={pieData}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
-            label
-          >
-            {pieData.map((entry, idx) => (
-              <Cell
-                key={`cell-${idx}`}
-                fill={pieColors[idx % pieColors.length]}
-              />
-            ))}
-          </Pie>
-          <Legend />
-        </PieChart>
+        <div className="overflow-x-auto">
+          <PieChart width={320} height={320}>
+            <Pie
+              data={pieData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              label
+            >
+              {pieData.map((entry, idx) => (
+                <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
+              ))}
+            </Pie>
+            <Legend />
+          </PieChart>
+        </div>
       </div>
-      <div className="col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        <div className="bg-blue-50 p-6 rounded-xl shadow-md border border-blue-200 transition-transform transform hover:scale-105">
-          <p className="text-blue-700 text-sm font-medium">
-            Pending Leave Requests
-          </p>
-          <p className="text-blue-900 text-3xl font-bold">
-            {leaveStats.pending}
-          </p>
-        </div>
-        <div className="bg-yellow-50 p-6 rounded-xl shadow-md border border-yellow-200 transition-transform transform hover:scale-105">
-          <p className="text-yellow-700 text-sm font-medium">
-            Total Leave Requests
-          </p>
-          <p className="text-yellow-900 text-3xl font-bold">
-            {leaveStats.total}
-          </p>
-        </div>
-        <div className="bg-green-50 p-6 rounded-xl shadow-md border border-green-200 transition-transform transform hover:scale-105">
-          <p className="text-green-700 text-sm font-medium">
-            Performance Reviews
-          </p>
-          <p className="text-green-900 text-3xl font-bold">
-            {performanceStats.total}
-          </p>
-        </div>
-        <div className="bg-purple-50 p-6 rounded-xl shadow-md border border-purple-200 transition-transform transform hover:scale-105">
-          <p className="text-purple-700 text-sm font-medium">Average Rating</p>
-          <p className="text-purple-900 text-3xl font-bold">
-            {performanceStats.avgRating.toFixed(1)} / 5
-          </p>
-        </div>
-        <div className="bg-gray-100 p-6 rounded-xl shadow-md border border-gray-200 transition-transform transform hover:scale-105">
-          <p className="text-gray-700 text-sm font-medium">Scheduling Tools</p>
-          <p className="text-gray-900 text-xl font-semibold">Active & Ready</p>
-        </div>
+  
+      {/* Summary Boxes */}
+      <div className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+        {[
+          {
+            title: "Pending Leave Requests",
+            value: leaveStats.pending,
+            bg: "blue",
+          },
+          {
+            title: "Total Leave Requests",
+            value: leaveStats.total,
+            bg: "yellow",
+          },
+          {
+            title: "Performance Reviews",
+            value: performanceStats.total,
+            bg: "green",
+          },
+          {
+            title: "Average Rating",
+            value: `${performanceStats.avgRating.toFixed(1)} / 5`,
+            bg: "purple",
+          },
+          {
+            title: "Scheduling Tools",
+            value: "Active & Ready",
+            bg: "gray",
+          },
+        ].map(({ title, value, bg }) => (
+          <div
+            key={title}
+            className={`bg-${bg}-50 p-4 sm:p-6 rounded-xl shadow-md border border-${bg}-200 transition-transform transform hover:scale-[1.02]`}
+          >
+            <p className={`text-${bg}-700 text-sm font-medium`}>{title}</p>
+            <p className={`text-${bg}-900 text-2xl sm:text-3xl font-bold`}>{value}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
+  
 };
 
 export default AdminDashboard;
