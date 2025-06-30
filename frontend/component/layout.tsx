@@ -10,8 +10,9 @@ import {
   LogOut,
   Briefcase,
   BarChart,
+  Menu,
+  X,
 } from "lucide-react";
-
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 
@@ -22,8 +23,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loadingNotif, setLoadingNotif] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Fetch notifications when bell is clicked
   const fetchNotifications = async () => {
     if (!session?.user?.employeeId) return;
     setLoadingNotif(true);
@@ -39,7 +40,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setLoadingNotif(false);
   };
 
-  // Mark all unread as read when closing popup
   const markAllAsRead = async () => {
     const unread = notifications.filter((n) => !n.read);
     for (const n of unread) {
@@ -49,11 +49,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ id: n._id }),
       });
     }
-    // Optionally update UI
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  // Handle outside click to close popup
   useEffect(() => {
     if (!showNotifications) return;
     function handleClick(e: MouseEvent) {
@@ -64,30 +62,43 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-    // eslint-disable-next-line
   }, [showNotifications, notifications]);
 
-  // Fetch notifications on mount so the badge is always up-to-date
   useEffect(() => {
     if (!session?.user?.employeeId) return;
     fetchNotifications();
-    // eslint-disable-next-line
   }, [session?.user?.employeeId]);
 
-  // Refetch notifications after closing the popup
   useEffect(() => {
     if (!showNotifications && session?.user?.employeeId) {
       fetchNotifications();
     }
-    // eslint-disable-next-line
   }, [showNotifications, session?.user?.employeeId]);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-80 bg-white shadow-md p-6 space-y-8">
-        <div className="flex items-center gap-2 mb-12">
-          <h2 className="text-3xl font-bold text-blue-900">Employee System</h2>
+      <aside
+        className={`fixed md:static top-0 left-0 z-40 w-64 bg-white shadow-md p-6 space-y-8 min-h-screen transition-transform transform ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
+      >
+        <div className="flex justify-between items-center mb-6 md:mb-12">
+          <h2 className="md:text-2xl text-lg font-bold text-blue-900">Employee System</h2>
+          <button
+            className="md:hidden p-1 rounded hover:bg-gray-200"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <X className="h-6 w-6" color="black" />
+          </button>
         </div>
 
         <nav className="space-y-2">
@@ -133,7 +144,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               await signOut({ callbackUrl: "/login" });
               setIsLoggingOut(false);
             }}
-            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed text-xl"
+            className="flex items-center gap-2 text-red-500 hover:text-red-700 transition text-xl cursor-pointer"
             disabled={isLoggingOut}
           >
             <LogOut size={24} /> {isLoggingOut ? "Logging out..." : "Logout"}
@@ -142,14 +153,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            {getGreeting()}, {session?.user?.name || "User"}
-          </h1>
+      <main className="flex-1 p-4 md:p-8 overflow-auto w-full">
+        {/* Top Bar */}
+        <div className="flex justify-between items-center mb-6 md:mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              className="md:hidden p-2 rounded-full hover:bg-gray-200"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl md:text-2xl font-semibold text-gray-800 hidden md:block">
+              {getGreeting()}, {session?.user?.name || "User"}
+            </h1>
+          </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-gray-500 text-sm">
+          <div className="flex items-center gap-4 md:gap-6 ">
+            <div className="text-gray-500 text-sm hidden md:block">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 day: "2-digit",
@@ -157,10 +177,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 year: "numeric",
               })}
             </div>
-            {/* Notification Bell */}
+
+            {/* Notifications */}
             <div className="relative">
               <button
-                className="relative p-2 rounded-full hover:bg-gray-200 transition cursor-pointer"
+                className="relative p-2 rounded-full hover:bg-gray-200 transition"
                 onClick={async () => {
                   setShowNotifications((prev) => !prev);
                   if (!showNotifications) await fetchNotifications();
@@ -180,14 +201,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                   />
                 </svg>
-                {/* Unread badge with count */}
                 {notifications.filter((n) => !n.read).length > 0 && (
                   <span className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs rounded-full">
                     {notifications.filter((n) => !n.read).length}
                   </span>
                 )}
               </button>
-              {/* Notification Popup */}
               {showNotifications && (
                 <div
                   ref={notifRef}
@@ -238,9 +257,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               )}
             </div>
-            {/* Profile Button */}
+
+            {/* Profile Icon */}
             <button
-              className="p-1 rounded-full hover:bg-gray-200 transition cursor-pointer"
+              className="p-1 rounded-full hover:bg-gray-200 transition"
               onClick={() => (window.location.href = "/profile")}
             >
               <svg
@@ -266,6 +286,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </button>
           </div>
         </div>
+
         {children}
       </main>
     </div>
@@ -292,7 +313,7 @@ const NavItem = ({
           ? "bg-blue-100 text-blue-700 font-semibold"
           : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
       }`}
-      style={{ fontSize: "1.4rem" }}
+      style={{ fontSize: "1.2rem" }}
     >
       <span className="flex items-center justify-center w-6 h-6">{icon}</span>
       <span className="ml-2">{label}</span>
@@ -300,10 +321,11 @@ const NavItem = ({
   );
 };
 
-export default Layout;
 const getGreeting = () => {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
   if (hour < 18) return "Good afternoon";
   return "Good evening";
 };
+
+export default Layout;
