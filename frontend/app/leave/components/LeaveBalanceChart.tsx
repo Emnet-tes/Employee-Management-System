@@ -22,7 +22,7 @@ const LeaveBalanceChart = ({ usedDays, totalDays }: Props) => {
   ];
 
   return (
-    <div className="w-2/5 h-72">
+    <div className="w-full md:w-2/5 h-72">
       <h1 className="text-lg font-semibold mb-4">Employee Leave Balance</h1>
       <ResponsiveContainer className="bg-white rounded-md shadow-md p-4">
         <PieChart>
