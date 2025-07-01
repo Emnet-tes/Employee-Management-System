@@ -19,7 +19,7 @@ const EmployeePerformancePage: React.FC<Props> = ({ session }) => {
   useEffect(() => {
     const fetchEmployeeReviews = async () => {
       if (!session?.user?.employeeId) {
-        setLoading(false); 
+        setLoading(false);
         return;
       }
 
@@ -49,8 +49,9 @@ const EmployeePerformancePage: React.FC<Props> = ({ session }) => {
   }
 
   return (
-    <div className="p-4 overflow-x-auto">
-      <table className="min-w-full table-auto border border-gray-300">
+    <div className="p-4 overflow-x-auto w-full">
+      <h2 className="text-2xl font-bold mb-4 text-black">Your Performance</h2>
+      <table className="min-w-[600px] w-full table-auto border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
             <th className="border px-4 py-2 text-black">Reviewer</th>
