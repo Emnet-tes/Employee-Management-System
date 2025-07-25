@@ -28,8 +28,11 @@ const AdminPerformancePage = () => {
   if (loading) return <Loading />;
 
   return (
-    <div className="p-4">
-      <table className="min-w-full border-collapse border border-gray-300">
+    <div className="p-4 overflow-x-auto w-full">
+      <h2 className="text-2xl font-bold mb-4 text-black">
+        Employee Performance
+      </h2>
+      <table className="min-w-[600px] w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-200">
             <th className="border border-gray-300 px-4 py-2 text-left text-black">

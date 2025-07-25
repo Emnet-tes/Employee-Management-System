@@ -19,7 +19,7 @@ interface Props {
       role: string;
     };
   };
-} 
+}
 export default function ClientSchedulePage({ session }: Props) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -81,7 +81,7 @@ export default function ClientSchedulePage({ session }: Props) {
   if (loading) return <Loading />;
 
   return (
-    <div className="grid grid-cols-1 gap-4 p-4 text-black">
+    <div className="grid grid-cols-1 gap-4 p-4 text-black w-full overflow-x-auto">
       {(session?.user?.role === "admin" ||
         session?.user?.role === "manager") && (
         <div className="flex justify-end max-h-12">
@@ -105,17 +105,18 @@ export default function ClientSchedulePage({ session }: Props) {
           />
         </div>
       )}
-
-      <Card>
+      <Card className="w-full min-w-[320px]">
         <CardContent>
           <h2 className="font-bold mb-4 text-lg text-black">Shift Calendar</h2>
-          <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            events={calendarEvents}
-            height={600}
-            eventDisplay="block"
-          />
+          <div className="w-full overflow-x-auto">
+            <FullCalendar
+              plugins={[dayGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              events={calendarEvents}
+              height={600}
+              eventDisplay="block"
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

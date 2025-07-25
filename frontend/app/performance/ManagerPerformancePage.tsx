@@ -66,7 +66,8 @@ const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
   if (loading) return <Loading />;
 
   return (
-    <div className="p-4 overflow-auto">
+    <div className="p-4 overflow-x-auto w-full">
+      <h2 className="text-2xl font-bold mb-4 text-black">Team Performance</h2>
       <AddReviewModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -84,7 +85,7 @@ const ManagerPerformancePage: React.FC<Props> = ({ session }) => {
           Add Review
         </button>
       </div>
-      <table className="min-w-full table-auto border border-gray-300">
+      <table className="min-w-[600px] w-full border-collapse border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
             <th className="border px-4 py-2 text-black">Employee</th>
